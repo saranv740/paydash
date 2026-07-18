@@ -31,9 +31,8 @@ table "upload_batches" {
   schema = schema.public
 
   column "id" {
-    type    = uuid
-    null    = false
-    default = sql("uuidv7()")
+    type = uuid
+    null = false
   }
 
   column "owner_id" {
@@ -56,6 +55,36 @@ table "upload_batches" {
     type    = timestamptz
     null    = false
     default = sql("now()")
+  }
+
+  column "total_orders_count" {
+    type = integer
+    null = false
+  }
+
+  column "total_orders_amount" {
+    type = text
+    null = false
+  }
+
+  column "total_payments_count" {
+    type = integer
+    null = false
+  }
+
+  column "total_payments_amount" {
+    type = text
+    null = false
+  }
+
+  column "reconciled_amount" {
+    type = text
+    null = false
+  }
+
+  column "dispute_amount" {
+    type = text
+    null = false
   }
 
   primary_key {
@@ -235,9 +264,8 @@ table "payments" {
 table "recon_results" {
   schema = schema.public
   column "id" {
-    type    = uuid
-    null    = false
-    default = sql("uuidv7()")
+    type = uuid
+    null = false
   }
 
   column "owner_id" {

@@ -1,0 +1,38 @@
+{
+	"data": {
+		"batch_id": "5198c8cb-849a-495b-96c7-529150eec50b",
+		"batch_name": "Reconciliation Run",
+		"discrepancies": [
+			{
+				"id": "99493f30-45d6-4b7a-852b-d301e27b456c",
+				"owner_id": "user_3Gfrnpzx6JJuzntqRgg8S5NnFBc",
+				"batch_id": "5198c8cb-849a-495b-96c7-529150eec50b",
+				"order_id": null,
+				"payment_id": "db2a4cd1-0e09-40e4-9e45-fafcc2db2466",
+				"type": "MISSING_PROCESSED_AT",
+				"amount_at_risk": "0.00",
+				"explanation": null,
+				"status": "UNRESOLVED",
+				"created_at": "0001-01-01T00:00:00Z",
+				"updated_at": "0001-01-01T00:00:00Z"
+			},
+			{
+				"id": "db5169e1-9b63-40d8-840a-5f114d4b4fd7",
+				"owner_id": "user_3Gfrnpzx6JJuzntqRgg8S5NnFBc",
+				"batch_id": "5198c8cb-849a-495b-96c7-529150eec50b",
+				"order_id": "de0cd2cf-a727-48fb-9c27-37913782668b",
+				"payment_id": "3884901d-057d-442b-9e45-294f5afd1836",
+				"type": "CURRENCY_MISMATCH",
+				"amount_at_risk": "210.00",
+				"explanation": null,
+				"status": "UNRESOLVED",
+				"created_at": "0001-01-01T00:00:00Z",
+				"updated_at": "0001-01-01T00:00:00Z"
+			}
+		],
+		"discrepancies_count": 20,
+		"orders_count": 185,
+		"payments_count": 187
+	},
+	"status": "success"
+}

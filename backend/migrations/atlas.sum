@@ -1,3 +1,6 @@
-h1:fonG+izNDQXjQEpMC3jGP0NvLfUqM7fZvkG7mo/k1hY=
+h1:/PO982R8qlq06HgophELo70cq+hx7AUlKv5e5VZqXGs=
 20260718100241_add_batch_table.sql h1:cx15lE5ylleQYldky/tfrmSQ01MWCQKAbFIT+5z7hag=
 20260718115149_added_all_tables.sql h1:xa83bP3zzUd+doS4C6F6fKb3lvDWF4bTvsso727Hfx0=
+20260718122842_remove_auto_uuid.sql h1:VPmYhdHMvmjnI0L1noKAXZScbnntY0rrYGo6UgJntWE=
+20260718140716_add_amount_fields.sql h1:4hCyJRKgErH+7J1BrB3CWxyOftmMrFXQqpQvLpBFH4U=
+20260718140918_column_name_change.sql h1:ly2aPd6m6afZUgPv+4Hh//ndf0N3XNSf6xzcOOGiess=

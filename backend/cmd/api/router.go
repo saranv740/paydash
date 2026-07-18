@@ -5,6 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/saranv740/paydash/internal/app"
+	"github.com/saranv740/paydash/internal/handlers"
+	"github.com/saranv740/paydash/internal/store"
 )
 
 func router(config *app.Config) *gin.Engine {
@@ -12,6 +14,10 @@ func router(config *app.Config) *gin.Engine {
 	router.Use(requestIDMiddleware())
 	router.Use(slogMiddleware(config.Logger))
 	router.Use(gin.Recovery())
+
+	// Initialize store and handlers
+	s := store.New(config.DB)
+	h := handlers.New(config.Logger, s)
 
 	api := router.Group("/v1")
 	api.GET("/healthcheck", func(c *gin.Context) {
@@ -24,6 +30,8 @@ func router(config *app.Config) *gin.Engine {
 
 	private := router.Group("/v1")
 	private.Use(clerkAuthMiddleware(config.Logger))
+
+	private.POST("/upload", h.UploadBatch)
 
 	return router
 }
