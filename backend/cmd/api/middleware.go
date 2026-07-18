@@ -9,6 +9,7 @@ import (
 	"github.com/clerk/clerk-sdk-go/v2/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/saranv740/paydash/internal/app"
 	"github.com/saranv740/paydash/internal/response"
 )
 
@@ -52,6 +53,13 @@ func slogMiddleware(logger *slog.Logger) gin.HandlerFunc {
 
 func clerkAuthMiddleware(logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if app.Environment() == "development" {
+			userID := c.GetHeader("X-Mock-UserID")
+			c.Set("userID", userID)
+			c.Next()
+			return
+		}
+
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			logger.Error("auth", "msg", "Authorization header missing")
@@ -81,7 +89,6 @@ func clerkAuthMiddleware(logger *slog.Logger) gin.HandlerFunc {
 		}
 
 		c.Set("userID", claims.Subject)
-		c.Set("claims", claims)
 		c.Next()
 	}
 }
