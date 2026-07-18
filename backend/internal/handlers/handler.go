@@ -396,8 +396,8 @@ func (h *Handler) ExplainDiscrepancy(c *gin.Context) {
 			response.SendError(c, http.StatusInternalServerError, "Something went wrong while retrieving explanation")
 			return
 		}
-
 		response.SendSuccess(c, http.StatusOK, cachedExpl)
+		return
 	}
 
 	// 3. Cache Miss: Call LLM with the context-rich detail
@@ -422,4 +422,36 @@ func (h *Handler) ExplainDiscrepancy(c *gin.Context) {
 	}
 
 	response.SendSuccess(c, http.StatusOK, expl)
+}
+
+// DeleteBatch handles deleting an upload batch and all its cascaded records
+func (h *Handler) DeleteBatch(c *gin.Context) {
+	ownerID := c.GetString("userID")
+	if ownerID == "" {
+		h.logger.Warn("User ID missing from request context")
+		response.SendError(c, http.StatusUnauthorized, "User authentication required")
+		return
+	}
+
+	batchID := c.Param("id")
+	if batchID == "" {
+		response.SendFail(c, http.StatusBadRequest, gin.H{"id": "batch ID is required"})
+		return
+	}
+
+	err := h.store.DeleteUploadBatch(c.Request.Context(), ownerID, batchID)
+	if err != nil {
+		if errors.Is(err, store.ErrBatchNotFound) {
+			response.SendError(c, http.StatusNotFound, "reconciliation batch not found")
+			return
+		}
+		h.logger.Error("Failed to delete upload batch", "batch_id", batchID, "owner_id", ownerID, "error", err)
+		response.SendError(c, http.StatusInternalServerError, "failed to delete upload batch")
+		return
+	}
+
+	response.SendSuccess(c, http.StatusOK, gin.H{
+		"id":      batchID,
+		"message": "upload batch deleted successfully",
+	})
 }

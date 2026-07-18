@@ -612,4 +612,21 @@ func (s *Store) UpdateDiscrepancyExplanation(ctx context.Context, ownerID, discr
 	return nil
 }
 
+// DeleteUploadBatch deletes an upload batch belonging to an owner. DB CASCADE deletes associated orders, payments, and recon_results.
+func (s *Store) DeleteUploadBatch(ctx context.Context, ownerID, batchID string) error {
+	query := `
+		DELETE FROM upload_batches
+		WHERE id = $1 AND owner_id = $2
+	`
+	cmdTag, err := s.db.Exec(ctx, query, batchID, ownerID)
+	if err != nil {
+		return fmt.Errorf("failed to delete upload batch: %w", err)
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return ErrBatchNotFound
+	}
+	return nil
+}
+
+
 
