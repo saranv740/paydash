@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:18.4
+    restart: always
+    environment:
+      POSTGRES_USER: paydash_admin
+      POSTGRES_PASSWORD: "1QTr2puWICDy3k5D"
+      POSTGRES_DB: paydash
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/18/docker
+
+volumes:
+  pg-data:
