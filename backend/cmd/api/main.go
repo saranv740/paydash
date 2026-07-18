@@ -22,15 +22,15 @@ func main() {
 	flag.IntVar(&port, "port", 3000, "port for the application to run")
 	flag.Parse()
 
-	err := godotenv.Load()
-	if err != nil {
-		panic("error in loading dotenv file")
-	}
-
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	if ok := ensureEnvVars(); !ok {
-		logger.Error("missing required env variables")
+	err := godotenv.Load()
+	if err != nil {
+		logger.Info(".env file not found")
+	}
+
+	if missing := getMissingEnvVars(); len(missing) > 0 {
+		logger.Error("missing required env variables", "missing", missing)
 		os.Exit(1)
 	}
 
@@ -75,18 +75,19 @@ func main() {
 	}
 }
 
-func ensureEnvVars() bool {
+func getMissingEnvVars() []string {
 	requiredEnv := []string{
 		"DB_URL",
 		"ENV",
 		"CLERK_SECRET_KEY",
 	}
 
+	var missing []string
 	for _, env := range requiredEnv {
 		if os.Getenv(env) == "" {
-			return false
+			missing = append(missing, env)
 		}
 	}
 
-	return true
+	return missing
 }

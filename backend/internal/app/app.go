@@ -19,6 +19,10 @@ func Environment() string {
 	return os.Getenv("ENV")
 }
 
+func AllowMockAuth() bool {
+	return os.Getenv("ALLOW_MOCK_AUTH") == "true"
+}
+
 // IsProd() returns whether the server is running in production environment
 func IsProd() bool {
 	return os.Getenv("ENV") == "production"
@@ -27,9 +31,4 @@ func IsProd() bool {
 // DBURL() returns the DB_URL variable from OS environment
 func DBURL() string {
 	return os.Getenv("DB_URL")
-}
-
-// JWTSecret() returns the JWT_SECRET variable from OS environment
-func JWTSecret() string {
-	return os.Getenv("JWT_SECRET")
 }

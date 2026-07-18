@@ -40,6 +40,9 @@ func (h *Handler) UploadBatch(c *gin.Context) {
 		return
 	}
 
+	// Limit request body size to 20MB to prevent memory exhaustion
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 20<<20)
+
 	// 2. Retrieve files
 	ordersHeader, err := c.FormFile("orders")
 	if err != nil {
@@ -48,10 +51,22 @@ func (h *Handler) UploadBatch(c *gin.Context) {
 		return
 	}
 
+	if !strings.HasSuffix(strings.ToLower(ordersHeader.Filename), ".csv") {
+		h.logger.Warn("Orders file extension is not .csv", "filename", ordersHeader.Filename)
+		response.SendFail(c, http.StatusBadRequest, gin.H{"orders": "orders file must be a CSV file"})
+		return
+	}
+
 	paymentsHeader, err := c.FormFile("payments")
 	if err != nil {
 		h.logger.Warn("Failed to retrieve payments file", "error", err)
 		response.SendFail(c, http.StatusBadRequest, gin.H{"payments": "payments CSV file is required"})
+		return
+	}
+
+	if !strings.HasSuffix(strings.ToLower(paymentsHeader.Filename), ".csv") {
+		h.logger.Warn("Payments file extension is not .csv", "filename", paymentsHeader.Filename)
+		response.SendFail(c, http.StatusBadRequest, gin.H{"payments": "payments file must be a CSV file"})
 		return
 	}
 

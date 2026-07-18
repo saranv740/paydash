@@ -1,11 +1,7 @@
 package response
 
 import (
-	"net/http"
-	"time"
-
 	"github.com/gin-gonic/gin"
-	"github.com/saranv740/paydash/internal/app"
 )
 
 func Send(c *gin.Context, status string, statusCode int, message any) {
@@ -35,32 +31,4 @@ func SendSuccess(c *gin.Context, statusCode int, message any) {
 
 func SendError(c *gin.Context, statusCode int, message string) {
 	Send(c, "error", statusCode, message)
-}
-
-func AddCookie(c *gin.Context, name string, value string, maxAge int) {
-	cookie := &http.Cookie{
-		Name:     name,
-		Value:    value,
-		Path:     "/",
-		MaxAge:   maxAge,
-		Secure:   app.IsProd(),
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	}
-
-	c.SetCookieData(cookie)
-}
-
-func RemoveCookie(c *gin.Context, name string) {
-	cookie := &http.Cookie{
-		Name:     name,
-		Value:    "",
-		Path:     "/",
-		Expires:  time.Unix(0, 0),
-		Secure:   app.IsProd(),
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	}
-
-	c.SetCookieData(cookie)
 }

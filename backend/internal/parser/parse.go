@@ -104,6 +104,7 @@ func ParseOrders(r io.Reader, ownerID, batchID string) ([]models.Order, error) {
 			stat = &status
 		}
 
+		now := time.Now()
 		orders = append(orders, models.Order{
 			ID:            uuid.New().String(),
 			OwnerID:       ownerID,
@@ -116,6 +117,8 @@ func ParseOrders(r io.Reader, ownerID, batchID string) ([]models.Order, error) {
 			Discount:      discount,
 			NetAmount:     netAmount,
 			Status:        stat,
+			CreatedAt:     now,
+			UpdatedAt:     now,
 		})
 	}
 
@@ -203,6 +206,7 @@ func ParsePayments(r io.Reader, ownerID, batchID string) ([]models.Payment, erro
 			stat = &status
 		}
 
+		now := time.Now()
 		payments = append(payments, models.Payment{
 			ID:             uuid.New().String(),
 			OwnerID:        ownerID,
@@ -216,6 +220,8 @@ func ParsePayments(r io.Reader, ownerID, batchID string) ([]models.Payment, erro
 			NetSettled:     netSettled,
 			Type:           txnType,
 			Status:         stat,
+			CreatedAt:      now,
+			UpdatedAt:      now,
 		})
 	}
 

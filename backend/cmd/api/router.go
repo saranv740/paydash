@@ -12,6 +12,7 @@ import (
 func router(config *app.Config) *gin.Engine {
 	router := gin.New()
 	router.Use(requestIDMiddleware())
+	router.Use(securityHeadersMiddleware())
 	router.Use(slogMiddleware(config.Logger))
 	router.Use(gin.Recovery())
 

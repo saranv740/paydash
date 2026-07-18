@@ -53,7 +53,7 @@ func slogMiddleware(logger *slog.Logger) gin.HandlerFunc {
 
 func clerkAuthMiddleware(logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if app.Environment() == "development" {
+		if app.Environment() == "development" && app.AllowMockAuth() {
 			userID := c.GetHeader("X-Mock-UserID")
 			c.Set("userID", userID)
 			c.Next()
@@ -89,6 +89,20 @@ func clerkAuthMiddleware(logger *slog.Logger) gin.HandlerFunc {
 		}
 
 		c.Set("userID", claims.Subject)
+		c.Next()
+	}
+}
+
+func securityHeadersMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("X-Frame-Options", "DENY")
+		c.Header("X-XSS-Protection", "1; mode=block")
+		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+		c.Header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; sandbox")
+		if app.IsProd() {
+			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
 		c.Next()
 	}
 }

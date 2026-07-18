@@ -3,10 +3,10 @@ package analyzer
 import (
 	"fmt"
 	"math"
-	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/saranv740/paydash/internal/models"
+	"github.com/saranv740/paydash/internal/parser"
 )
 
 // FindDiscrepancies performs pure comparison logic following a strict precedence hierarchy
@@ -18,15 +18,6 @@ func FindDiscrepancies(ownerID, batchID string, orders []models.Order, payments 
 	for _, p := range payments {
 		ref := getString(p.OrderID)
 		paymentMap[ref] = append(paymentMap[ref], p)
-
-		// Data Warning: Missing processed_at timestamp
-		if p.ProcessedAt == nil {
-			pID := p.ID
-			results = append(
-				results,
-				createDiscrepancy(ownerID, batchID, nil, &pID, models.MissingProcessedAt, "0.00"),
-			)
-		}
 	}
 
 	// 2. Evaluate orders against indexed payments
@@ -41,7 +32,7 @@ func FindDiscrepancies(ownerID, batchID string, orders []models.Order, payments 
 		if seenOrders[businessID] {
 			results = append(
 				results,
-				createDiscrepancy(ownerID, batchID, &dbOrderID, nil, models.DuplicateOrderEntry, fmt.Sprintf("%.2f", parseFloat(order.NetAmount))),
+				createDiscrepancy(ownerID, batchID, &dbOrderID, nil, models.DuplicateOrderEntry, fmt.Sprintf("%.2f", parser.ParseFloat(order.NetAmount))),
 			)
 			continue
 		}
@@ -53,14 +44,21 @@ func FindDiscrepancies(ownerID, batchID string, orders []models.Order, payments 
 		if len(matchedPayments) == 0 {
 			results = append(
 				results,
-				createDiscrepancy(ownerID, batchID, &dbOrderID, nil, models.UnpaidOrder, fmt.Sprintf("%.2f", parseFloat(order.NetAmount))),
+				createDiscrepancy(ownerID, batchID, &dbOrderID, nil, models.UnpaidOrder, fmt.Sprintf("%.2f", parser.ParseFloat(order.NetAmount))),
 			)
 			continue
 		}
 
-		// Track matched payment IDs
+		// Track matched payment IDs and check for missing processed_at warning only on matched payments
 		for _, p := range matchedPayments {
 			matchedPaymentIDs[p.ID] = true
+			if p.ProcessedAt == nil {
+				pID := p.ID
+				results = append(
+					results,
+					createDiscrepancy(ownerID, batchID, &dbOrderID, &pID, models.MissingProcessedAt, "0.00"),
+				)
+			}
 		}
 
 		// Separate "charge" transactions from "refund"
@@ -74,16 +72,13 @@ func FindDiscrepancies(ownerID, batchID string, orders []models.Order, payments 
 
 		// Rule 2: DUPLICATE_CHARGE
 		if len(charges) > 1 {
-			var extraSum float64
 			for i := 1; i < len(charges); i++ {
-				extraSum += parseFloat(charges[i].Amount)
+				pID := charges[i].ID
+				results = append(
+					results,
+					createDiscrepancy(ownerID, batchID, &dbOrderID, &pID, models.DuplicateCharge, fmt.Sprintf("%.2f", parser.ParseFloat(charges[i].Amount))),
+				)
 			}
-
-			pID := charges[1].ID
-			results = append(
-				results,
-				createDiscrepancy(ownerID, batchID, &dbOrderID, &pID, models.DuplicateCharge, fmt.Sprintf("%.2f", extraSum)),
-			)
 			continue
 		}
 
@@ -98,7 +93,7 @@ func FindDiscrepancies(ownerID, batchID string, orders []models.Order, payments 
 			if oStatus == "completed" && pStatus == "failed" {
 				results = append(
 					results,
-					createDiscrepancy(ownerID, batchID, &dbOrderID, &pID, models.PaymentFailed, fmt.Sprintf("%.2f", parseFloat(order.NetAmount))),
+					createDiscrepancy(ownerID, batchID, &dbOrderID, &pID, models.PaymentFailed, fmt.Sprintf("%.2f", parser.ParseFloat(order.NetAmount))),
 				)
 				continue
 			}
@@ -107,7 +102,7 @@ func FindDiscrepancies(ownerID, batchID string, orders []models.Order, payments 
 			if oStatus == "cancelled" && pStatus == "settled" {
 				results = append(
 					results,
-					createDiscrepancy(ownerID, batchID, &dbOrderID, &pID, models.CancelledOrderSettled, fmt.Sprintf("%.2f", parseFloat(p.Amount))),
+					createDiscrepancy(ownerID, batchID, &dbOrderID, &pID, models.CancelledOrderSettled, fmt.Sprintf("%.2f", parser.ParseFloat(p.Amount))),
 				)
 				continue
 			}
@@ -118,14 +113,14 @@ func FindDiscrepancies(ownerID, batchID string, orders []models.Order, payments 
 			if oCurr != "" && pCurr != "" && oCurr != pCurr {
 				results = append(
 					results,
-					createDiscrepancy(ownerID, batchID, &dbOrderID, &pID, models.CurrencyMismatch, fmt.Sprintf("%.2f", parseFloat(p.Amount))),
+					createDiscrepancy(ownerID, batchID, &dbOrderID, &pID, models.CurrencyMismatch, fmt.Sprintf("%.2f", parser.ParseFloat(p.Amount))),
 				)
 				continue
 			}
 
 			// Rule 6: AMOUNT_MISMATCH
-			oNet := parseFloat(order.NetAmount)
-			pAmt := parseFloat(p.Amount)
+			oNet := parser.ParseFloat(order.NetAmount)
+			pAmt := parser.ParseFloat(p.Amount)
 			diff := math.Abs(oNet - pAmt)
 			if diff > 0.01 {
 				results = append(
@@ -152,7 +147,7 @@ func FindDiscrepancies(ownerID, batchID string, orders []models.Order, payments 
 			pID := p.ID
 			results = append(
 				results,
-				createDiscrepancy(ownerID, batchID, nil, &pID, models.OrphanPayment, fmt.Sprintf("%.2f", parseFloat(p.Amount))),
+				createDiscrepancy(ownerID, batchID, nil, &pID, models.OrphanPayment, fmt.Sprintf("%.2f", parser.ParseFloat(p.Amount))),
 			)
 		}
 	}
@@ -161,17 +156,6 @@ func FindDiscrepancies(ownerID, batchID string, orders []models.Order, payments 
 }
 
 // Helpers
-func parseFloat(s *string) float64 {
-	if s == nil || *s == "" {
-		return 0.0
-	}
-	val, err := strconv.ParseFloat(*s, 64)
-	if err != nil {
-		return 0.0
-	}
-	return val
-}
-
 func getString(s *string) string {
 	if s == nil {
 		return ""

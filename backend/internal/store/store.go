@@ -256,12 +256,12 @@ func (s *Store) GetBatchReport(ctx context.Context, params models.ReportFilterPa
 
 	if params.MinAmount != nil {
 		args = append(args, *params.MinAmount)
-		whereConditions = append(whereConditions, fmt.Sprintf("CAST(recon_results.amount_at_risk AS NUMERIC) >= $%d", len(args)))
+		whereConditions = append(whereConditions, fmt.Sprintf("recon_results.amount_at_risk >= $%d", len(args)))
 	}
 
 	if params.MaxAmount != nil {
 		args = append(args, *params.MaxAmount)
-		whereConditions = append(whereConditions, fmt.Sprintf("CAST(recon_results.amount_at_risk AS NUMERIC) <= $%d", len(args)))
+		whereConditions = append(whereConditions, fmt.Sprintf("recon_results.amount_at_risk <= $%d", len(args)))
 	}
 
 	if strings.TrimSpace(params.Search) != "" {
@@ -280,7 +280,7 @@ func (s *Store) GetBatchReport(ctx context.Context, params models.ReportFilterPa
 	queryBreakdown := fmt.Sprintf(`
 		SELECT recon_results.type,
 		       COUNT(*) as count,
-		       COALESCE(SUM(CAST(recon_results.amount_at_risk AS NUMERIC)), 0) as total_amount
+		       COALESCE(SUM(recon_results.amount_at_risk), 0) as total_amount
 		FROM recon_results
 		LEFT JOIN orders ON recon_results.order_id = orders.id
 		LEFT JOIN payments ON recon_results.payment_id = payments.id
@@ -362,7 +362,7 @@ func (s *Store) GetBatchReport(ctx context.Context, params models.ReportFilterPa
 	offset := (page - 1) * pageSize
 
 	// Sanitize Sort Column
-	sortCol := "CAST(recon_results.amount_at_risk AS NUMERIC)"
+	sortCol := "recon_results.amount_at_risk"
 	switch strings.ToLower(params.SortBy) {
 	case "type":
 		sortCol = "recon_results.type"

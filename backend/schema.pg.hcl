@@ -127,12 +127,12 @@ table "orders" {
 
   column "currency" {
     type = text
-    null = false
+    null = true
   }
 
   column "gross_amount" {
     type = text
-    null = false
+    null = true
   }
 
   column "discount" {
@@ -142,12 +142,12 @@ table "orders" {
 
   column "net_amount" {
     type = text
-    null = false
+    null = true
   }
 
   column "status" {
     type = text
-    null = false
+    null = true
   }
 
   column "created_at" {
@@ -209,32 +209,32 @@ table "payments" {
 
   column "currency" {
     type = text
-    null = false
+    null = true
   }
 
   column "amount" {
     type = text
-    null = false
+    null = true
   }
 
   column "fee" {
     type = text
-    null = false
+    null = true
   }
 
   column "net_settled" {
     type = text
-    null = false
+    null = true
   }
 
   column "type" {
     type = text
-    null = false
+    null = true
   }
 
   column "status" {
     type = text
-    null = false
+    null = true
   }
 
   column "created_at" {
@@ -294,13 +294,13 @@ table "recon_results" {
   }
 
   column "amount_at_risk" {
-    type = text
+    type = numeric(12, 2)
     null = false
   }
 
   column "explanation" {
     type = text
-    null = false
+    null = true
   }
 
   column "resolution" {
