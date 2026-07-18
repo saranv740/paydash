@@ -14,7 +14,6 @@ func router(config *app.Config) *gin.Engine {
 	router.Use(gin.Recovery())
 
 	api := router.Group("/v1")
-
 	api.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":      "online",
@@ -22,6 +21,9 @@ func router(config *app.Config) *gin.Engine {
 			"environment": app.Environment(),
 		})
 	})
+
+	private := router.Group("/v1")
+	private.Use(clerkAuthMiddleware(config.Logger))
 
 	return router
 }

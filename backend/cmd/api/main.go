@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/joho/godotenv"
 	"github.com/saranv740/paydash/internal/app"
 	"github.com/saranv740/paydash/internal/db"
@@ -32,6 +33,8 @@ func main() {
 		logger.Error("missing required env variables")
 		os.Exit(1)
 	}
+
+	clerk.SetKey(os.Getenv("CLERK_SECRET_KEY"))
 
 	db, closeDB, err := db.OpenDB(app.DBURL())
 	if err != nil {
@@ -76,7 +79,7 @@ func ensureEnvVars() bool {
 	requiredEnv := []string{
 		"DB_URL",
 		"ENV",
-		"JWT_SECRET",
+		"CLERK_SECRET_KEY",
 	}
 
 	for _, env := range requiredEnv {

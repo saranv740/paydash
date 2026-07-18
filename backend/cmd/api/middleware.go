@@ -2,10 +2,14 @@ package main
 
 import (
 	"log/slog"
+	"net/http"
+	"strings"
 	"time"
 
+	"github.com/clerk/clerk-sdk-go/v2/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/saranv740/paydash/internal/response"
 )
 
 func requestIDMiddleware() gin.HandlerFunc {
@@ -43,5 +47,41 @@ func slogMiddleware(logger *slog.Logger) gin.HandlerFunc {
 			slog.Int("status", c.Writer.Status()),
 			slog.Duration("latency", time.Since(start)),
 		)
+	}
+}
+
+func clerkAuthMiddleware(logger *slog.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			logger.Error("auth", "msg", "Authorization header missing")
+			c.Abort()
+			response.SendError(c, http.StatusUnauthorized, "Authorization is required")
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			logger.Error("auth", "msg", "Invalid Authorization header format")
+			c.Abort()
+			response.SendError(c, http.StatusUnauthorized, "Authorization is required")
+			return
+		}
+
+		sessionToken := parts[1]
+
+		claims, err := jwt.Verify(c.Request.Context(), &jwt.VerifyParams{
+			Token: sessionToken,
+		})
+		if err != nil {
+			logger.Error("auth", "msg", "Invalid token")
+			c.Abort()
+			response.SendError(c, http.StatusUnauthorized, "Authorization is required")
+			return
+		}
+
+		c.Set("userID", claims.Subject)
+		c.Set("claims", claims)
+		c.Next()
 	}
 }
