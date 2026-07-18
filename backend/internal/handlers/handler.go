@@ -455,3 +455,33 @@ func (h *Handler) DeleteBatch(c *gin.Context) {
 		"message": "upload batch deleted successfully",
 	})
 }
+
+// GetDiscrepancyDetail retrieves a single discrepancy with its joined Order and Payment details
+func (h *Handler) GetDiscrepancyDetail(c *gin.Context) {
+	ownerID := c.GetString("userID")
+	if ownerID == "" {
+		h.logger.Warn("User ID missing from request context")
+		response.SendError(c, http.StatusUnauthorized, "User authentication required")
+		return
+	}
+
+	discrepancyID := c.Param("id")
+	if discrepancyID == "" {
+		response.SendFail(c, http.StatusBadRequest, gin.H{"id": "discrepancy ID is required"})
+		return
+	}
+
+	detail, err := h.store.GetDiscrepancyDetail(c.Request.Context(), ownerID, discrepancyID)
+	if err != nil {
+		if errors.Is(err, store.ErrDiscrepancyNotFound) {
+			response.SendError(c, http.StatusNotFound, "discrepancy not found")
+			return
+		}
+		h.logger.Error("Failed to fetch discrepancy detail", "discrepancy_id", discrepancyID, "owner_id", ownerID, "error", err)
+		response.SendError(c, http.StatusInternalServerError, "failed to retrieve discrepancy details")
+		return
+	}
+
+	response.SendSuccess(c, http.StatusOK, detail)
+}
+

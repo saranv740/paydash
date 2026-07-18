@@ -38,9 +38,11 @@ func router(config *app.Config) *gin.Engine {
 	private.PATCH("/batches/:id", h.UpdateBatchName)
 	private.DELETE("/batches/:id", h.DeleteBatch)
 	private.PATCH("/discrepancies/:id/resolution", h.UpdateDiscrepancyResolution)
+	private.GET("/discrepancies/:id", h.GetDiscrepancyDetail)
 	private.GET("/discrepancies/:id/explain", h.ExplainDiscrepancy)
 
 	return router
 }
+
 
 
