@@ -43,3 +43,55 @@ type ReconResult struct {
 	CreatedAt    time.Time       `json:"created_at" db:"created_at"`
 	UpdatedAt    time.Time       `json:"updated_at" db:"updated_at"`
 }
+
+// DiscrepancyDetail contains a discrepancy along with its optionally joined Order and Payment details
+type DiscrepancyDetail struct {
+	ID           string          `json:"id"`
+	BatchID      string          `json:"batch_id"`
+	Type         DiscrepancyType `json:"type"`
+	AmountAtRisk string          `json:"amount_at_risk"`
+	Explanation  *string         `json:"explanation"`
+	Resolution   ResolutionType  `json:"resolution"`
+	CreatedAt    time.Time       `json:"created_at"`
+	Order        *Order          `json:"order,omitempty"`
+	Payment      *Payment        `json:"payment,omitempty"`
+}
+
+// DiscrepancyBreakdown represents aggregated risk count and amounts grouped by discrepancy type
+type DiscrepancyBreakdown struct {
+	Type                  DiscrepancyType `json:"type"`
+	Count                 int             `json:"count"`
+	TotalAmountAtRisk     string          `json:"total_amount_at_risk"`
+	PercentageOfTotalRisk float64         `json:"percentage_of_total_risk"`
+}
+
+// ReportFilterParams contains filter and pagination settings for fetching a batch report
+type ReportFilterParams struct {
+	BatchID         string
+	OwnerID         string
+	Page            int
+	PageSize        int
+	Search          string
+	DiscrepancyType string
+	Resolution      string
+	MinAmount       *float64
+	MaxAmount       *float64
+	SortBy          string
+	SortOrder       string
+}
+
+// PaginationMeta contains metadata about pagination state
+type PaginationMeta struct {
+	CurrentPage  int `json:"current_page"`
+	PageSize     int `json:"page_size"`
+	TotalRecords int `json:"total_records"`
+	TotalPages   int `json:"total_pages"`
+}
+
+// BatchReportResponse represents the full report output payload
+type BatchReportResponse struct {
+	Batch         *UploadBatch           `json:"batch"`
+	Breakdown     []DiscrepancyBreakdown `json:"breakdown"`
+	Discrepancies []DiscrepancyDetail    `json:"discrepancies"`
+	Pagination    PaginationMeta         `json:"pagination"`
+}

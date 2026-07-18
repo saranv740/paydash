@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -136,6 +138,71 @@ func (h *Handler) ListBatches(c *gin.Context) {
 	})
 }
 
+// GetBatchReport retrieves the full reconciliation report for a given batch ID
+func (h *Handler) GetBatchReport(c *gin.Context) {
+	ownerID := c.GetString("userID")
+	if ownerID == "" {
+		h.logger.Warn("User ID missing from request context")
+		response.SendError(c, http.StatusUnauthorized, "User authentication required")
+		return
+	}
+
+	batchID := c.Param("id")
+	if batchID == "" {
+		response.SendFail(c, http.StatusBadRequest, gin.H{"id": "batch ID is required"})
+		return
+	}
+
+	// Parse query parameters
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	search := c.Query("search")
+	discrepancyType := c.Query("discrepancy_type")
+	resolution := c.Query("resolution")
+	sortBy := c.Query("sort_by")
+	sortOrder := c.Query("sort_order")
+
+	var minAmount *float64
+	if minStr := c.Query("min_amount"); minStr != "" {
+		if val, err := strconv.ParseFloat(minStr, 64); err == nil {
+			minAmount = &val
+		}
+	}
+
+	var maxAmount *float64
+	if maxStr := c.Query("max_amount"); maxStr != "" {
+		if val, err := strconv.ParseFloat(maxStr, 64); err == nil {
+			maxAmount = &val
+		}
+	}
+
+	params := models.ReportFilterParams{
+		BatchID:         batchID,
+		OwnerID:         ownerID,
+		Page:            page,
+		PageSize:        pageSize,
+		Search:          search,
+		DiscrepancyType: discrepancyType,
+		Resolution:      resolution,
+		MinAmount:       minAmount,
+		MaxAmount:       maxAmount,
+		SortBy:          sortBy,
+		SortOrder:       sortOrder,
+	}
+
+	report, err := h.store.GetBatchReport(c.Request.Context(), params)
+	if err != nil {
+		if errors.Is(err, store.ErrBatchNotFound) {
+			response.SendError(c, http.StatusNotFound, "reconciliation batch not found")
+			return
+		}
+		h.logger.Error("Failed to fetch batch report", "batch_id", batchID, "owner_id", ownerID, "error", err)
+		response.SendError(c, http.StatusInternalServerError, "failed to generate batch report")
+		return
+	}
+
+	response.SendSuccess(c, http.StatusOK, report)
+}
 
 // Helper to compute summary KPI metadata for UploadBatch
 func computeBatchMetadata(ownerID, batchID, batchName string, orders []models.Order, payments []models.Payment, discrepancies []models.ReconResult) *models.UploadBatch {
