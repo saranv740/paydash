@@ -32,6 +32,7 @@ func router(config *app.Config) *gin.Engine {
 	private.Use(clerkAuthMiddleware(config.Logger))
 
 	private.POST("/upload", h.UploadBatch)
+	private.GET("/batches", h.ListBatches)
 
 	return router
 }

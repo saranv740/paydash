@@ -136,3 +136,52 @@ func (s *Store) SaveReconciliationRun(
 
 	return tx.Commit(ctx)
 }
+
+// ListUploadBatches retrieves all upload batches belonging to a specific owner, ordered by creation date descending.
+func (s *Store) ListUploadBatches(ctx context.Context, ownerID string) ([]models.UploadBatch, error) {
+	query := `
+		SELECT id, owner_id, name,
+		       total_orders_count, total_orders_amount,
+		       total_payments_count, total_payments_amount,
+		       reconciled_amount, dispute_amount,
+		       created_at, updated_at
+		FROM upload_batches
+		WHERE owner_id = $1
+		ORDER BY created_at DESC
+	`
+
+	rows, err := s.db.Query(ctx, query, ownerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	batches := make([]models.UploadBatch, 0)
+	for rows.Next() {
+		var b models.UploadBatch
+		err := rows.Scan(
+			&b.ID,
+			&b.OwnerID,
+			&b.Name,
+			&b.TotalOrdersCount,
+			&b.TotalOrdersAmount,
+			&b.TotalPaymentsCount,
+			&b.TotalPaymentAmount,
+			&b.ReconciledAmount,
+			&b.DisputeAmount,
+			&b.CreatedAt,
+			&b.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		batches = append(batches, b)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return batches, nil
+}
+

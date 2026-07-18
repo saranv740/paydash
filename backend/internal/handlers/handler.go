@@ -114,6 +114,29 @@ func (h *Handler) UploadBatch(c *gin.Context) {
 	})
 }
 
+// ListBatches handles fetching all reconciliation upload runs for the authenticated user
+func (h *Handler) ListBatches(c *gin.Context) {
+	ownerID := c.GetString("userID")
+	if ownerID == "" {
+		h.logger.Warn("User ID missing from request context")
+		response.SendError(c, http.StatusUnauthorized, "User authentication required")
+		return
+	}
+
+	batches, err := h.store.ListUploadBatches(c.Request.Context(), ownerID)
+	if err != nil {
+		h.logger.Error("Failed to list upload batches", "owner_id", ownerID, "error", err)
+		response.SendError(c, http.StatusInternalServerError, "failed to retrieve reconciliation batches")
+		return
+	}
+
+	response.SendSuccess(c, http.StatusOK, gin.H{
+		"batches": batches,
+		"total":   len(batches),
+	})
+}
+
+
 // Helper to compute summary KPI metadata for UploadBatch
 func computeBatchMetadata(ownerID, batchID, batchName string, orders []models.Order, payments []models.Payment, discrepancies []models.ReconResult) *models.UploadBatch {
 	now := time.Now()
