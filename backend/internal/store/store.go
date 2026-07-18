@@ -516,3 +516,100 @@ func (s *Store) UpdateDiscrepancyResolution(ctx context.Context, ownerID, discre
 	return nil
 }
 
+// GetDiscrepancyDetail retrieves a single discrepancy along with its joined Order and Payment details
+func (s *Store) GetDiscrepancyDetail(ctx context.Context, ownerID, discrepancyID string) (*models.DiscrepancyDetail, error) {
+	query := `
+		SELECT recon_results.id, recon_results.batch_id, recon_results.type, recon_results.amount_at_risk, recon_results.explanation, recon_results.resolution, recon_results.created_at,
+		       orders.id, orders.owner_id, orders.batch_id, orders.order_id, orders.order_date, orders.customer_email, orders.currency, orders.gross_amount, orders.discount, orders.net_amount, orders.status, orders.created_at, orders.updated_at,
+		       payments.id, payments.owner_id, payments.batch_id, payments.transaction_ref, payments.processed_at, payments.order_id, payments.currency, payments.amount, payments.fee, payments.net_settled, payments.type, payments.status, payments.created_at, payments.updated_at
+		FROM recon_results
+		LEFT JOIN orders ON recon_results.order_id = orders.id
+		LEFT JOIN payments ON recon_results.payment_id = payments.id
+		WHERE recon_results.id = $1 AND recon_results.owner_id = $2
+	`
+
+	var detail models.DiscrepancyDetail
+	var (
+		oID, oOwnerID, oBatchID, oOrderID *string
+		oOrderDate                        *time.Time
+		oEmail, oCurr, oGross, oDisc      *string
+		oNet, oStatus                     *string
+		oCreatedAt, oUpdatedAt            *time.Time
+
+		pID, pOwnerID, pBatchID, pTxnRef *string
+		pProcessedAt                     *time.Time
+		pOrderID, pCurr, pAmt, pFee      *string
+		pNetSettled, pType, pStatus      *string
+		pCreatedAt, pUpdatedAt           *time.Time
+	)
+
+	err := s.db.QueryRow(ctx, query, discrepancyID, ownerID).Scan(
+		&detail.ID, &detail.BatchID, &detail.Type, &detail.AmountAtRisk, &detail.Explanation, &detail.Resolution, &detail.CreatedAt,
+		&oID, &oOwnerID, &oBatchID, &oOrderID, &oOrderDate, &oEmail, &oCurr, &oGross, &oDisc, &oNet, &oStatus, &oCreatedAt, &oUpdatedAt,
+		&pID, &pOwnerID, &pBatchID, &pTxnRef, &pProcessedAt, &pOrderID, &pCurr, &pAmt, &pFee, &pNetSettled, &pType, &pStatus, &pCreatedAt, &pUpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrDiscrepancyNotFound
+		}
+		return nil, fmt.Errorf("failed to fetch discrepancy detail: %w", err)
+	}
+
+	if oID != nil {
+		detail.Order = &models.Order{
+			ID:            *oID,
+			OwnerID:       *oOwnerID,
+			BatchID:       *oBatchID,
+			OrderID:       *oOrderID,
+			OrderDate:     oOrderDate,
+			CustomerEmail: oEmail,
+			Currency:      oCurr,
+			GrossAmount:   oGross,
+			Discount:      oDisc,
+			NetAmount:     oNet,
+			Status:        oStatus,
+			CreatedAt:     *oCreatedAt,
+			UpdatedAt:     *oUpdatedAt,
+		}
+	}
+
+	if pID != nil {
+		detail.Payment = &models.Payment{
+			ID:             *pID,
+			OwnerID:        *pOwnerID,
+			BatchID:        *pBatchID,
+			TransactionRef: *pTxnRef,
+			ProcessedAt:    pProcessedAt,
+			OrderID:        pOrderID,
+			Currency:       pCurr,
+			Amount:         pAmt,
+			Fee:            pFee,
+			NetSettled:     pNetSettled,
+			Type:           pType,
+			Status:         pStatus,
+			CreatedAt:      *pCreatedAt,
+			UpdatedAt:      *pUpdatedAt,
+		}
+	}
+
+	return &detail, nil
+}
+
+// UpdateDiscrepancyExplanation saves the generated explanation JSON string in the database
+func (s *Store) UpdateDiscrepancyExplanation(ctx context.Context, ownerID, discrepancyID string, explanation string) error {
+	query := `
+		UPDATE recon_results
+		SET explanation = $1, updated_at = NOW()
+		WHERE id = $2 AND owner_id = $3
+	`
+	cmdTag, err := s.db.Exec(ctx, query, explanation, discrepancyID, ownerID)
+	if err != nil {
+		return fmt.Errorf("failed to update discrepancy explanation: %w", err)
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return ErrDiscrepancyNotFound
+	}
+	return nil
+}
+
+

@@ -80,6 +80,8 @@ func getMissingEnvVars() []string {
 		"DB_URL",
 		"ENV",
 		"CLERK_SECRET_KEY",
+		"LLM_BASE_URL",
+		"LLM_API_KEY",
 	}
 
 	var missing []string

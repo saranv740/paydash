@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -12,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/saranv740/paydash/internal/analyzer"
+	"github.com/saranv740/paydash/internal/llm"
 	"github.com/saranv740/paydash/internal/models"
 	"github.com/saranv740/paydash/internal/parser"
 	"github.com/saranv740/paydash/internal/response"
@@ -354,4 +356,70 @@ func computeBatchMetadata(ownerID, batchID, batchName string, orders []models.Or
 		CreatedAt:          now,
 		UpdatedAt:          now,
 	}
+}
+
+// ExplainDiscrepancy retrieves a single discrepancy and asks the LLM for a structured explanation.
+// It caches the explanation in the database to avoid redundant API requests.
+func (h *Handler) ExplainDiscrepancy(c *gin.Context) {
+	ownerID := c.GetString("userID")
+	if ownerID == "" {
+		h.logger.Warn("User ID missing from request context")
+		response.SendError(c, http.StatusUnauthorized, "User authentication required")
+		return
+	}
+
+	discrepancyID := c.Param("id")
+	if discrepancyID == "" {
+		response.SendFail(c, http.StatusBadRequest, gin.H{"id": "discrepancy ID is required"})
+		return
+	}
+
+	// 1. Fetch discrepancy details (includes Order + Payment)
+	detail, err := h.store.GetDiscrepancyDetail(c.Request.Context(), ownerID, discrepancyID)
+	if err != nil {
+		if errors.Is(err, store.ErrDiscrepancyNotFound) {
+			response.SendError(c, http.StatusNotFound, "discrepancy not found")
+			return
+		}
+		h.logger.Error("Failed to fetch discrepancy detail", "discrepancy_id", discrepancyID, "owner_id", ownerID, "error", err)
+		response.SendError(c, http.StatusInternalServerError, "failed to retrieve discrepancy details")
+		return
+	}
+
+	// 2. Cache Hit: If explanation is already present in DB, parse and return it immediately
+	if detail.Explanation != nil && *detail.Explanation != "" {
+		var cachedExpl llm.Explanation
+
+		err := json.Unmarshal([]byte(*detail.Explanation), &cachedExpl)
+		if err != nil {
+			h.logger.Warn("Failed to unmarshal cached explanation from DB; querying LLM for fresh explanation", "discrepancy_id", discrepancyID)
+			response.SendError(c, http.StatusInternalServerError, "Something went wrong while retrieving explanation")
+			return
+		}
+
+		response.SendSuccess(c, http.StatusOK, cachedExpl)
+	}
+
+	// 3. Cache Miss: Call LLM with the context-rich detail
+	expl, err := llm.Explain(c.Request.Context(), detail)
+	if err != nil {
+		h.logger.Error("LLM explanation generation failed", "discrepancy_id", discrepancyID, "error", err)
+		response.SendError(c, http.StatusServiceUnavailable, "AI explanation provider is temporarily unavailable. Please try again later.")
+		return
+	}
+
+	// 4. Save explanation JSON back to DB to cache it
+	explBytes, err := json.Marshal(expl)
+	if err != nil {
+		h.logger.Error("Failed to marshal LLM explanation for caching", "discrepancy_id", discrepancyID, "error", err)
+		response.SendError(c, http.StatusInternalServerError, "Something went wrong")
+		return
+	}
+
+	err = h.store.UpdateDiscrepancyExplanation(c.Request.Context(), ownerID, discrepancyID, string(explBytes))
+	if err != nil {
+		h.logger.Error("Failed to cache LLM explanation to DB", "discrepancy_id", discrepancyID, "error", err)
+	}
+
+	response.SendSuccess(c, http.StatusOK, expl)
 }

@@ -3,6 +3,7 @@ package app
 import (
 	"log/slog"
 	"os"
+	"strconv"
 
 	"github.com/saranv740/paydash/internal/db"
 )
@@ -12,6 +13,37 @@ type Config struct {
 	DB      *db.DBC
 	Version string
 	Logger  *slog.Logger
+}
+
+type LLMConfig struct {
+	APIKey      string
+	BaseURL     string
+	Model       string
+	Temperature float64
+}
+
+// GetLLMConfig retrieves and sets default values for LLM configuration from environment variables
+func GetLLMConfig() LLMConfig {
+	baseURL := os.Getenv("LLM_BASE_URL")
+
+	model := os.Getenv("LLM_MODEL")
+	if model == "" {
+		model = "thinkingmachines/inkling"
+	}
+
+	temp := 0.2
+	if tempStr := os.Getenv("LLM_TEMPERATURE"); tempStr != "" {
+		if val, err := strconv.ParseFloat(tempStr, 64); err == nil {
+			temp = val
+		}
+	}
+
+	return LLMConfig{
+		APIKey:      os.Getenv("LLM_API_KEY"),
+		BaseURL:     baseURL,
+		Model:       model,
+		Temperature: temp,
+	}
 }
 
 // Environment() returns the ENV variable from OS environment
