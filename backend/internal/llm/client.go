@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -13,6 +14,10 @@ import (
 	"github.com/saranv740/paydash/internal/app"
 	"github.com/saranv740/paydash/internal/models"
 )
+
+var httpClient = &http.Client{
+	Timeout: 20 * time.Second,
+}
 
 // Explanation represents the structured JSON output returned to the client
 type Explanation struct {
@@ -107,7 +112,6 @@ Return ONLY the JSON object. Do not explain your output or surround it with mark
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", cfg.APIKey))
 
-	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dispatch LLM request: %w", err)
@@ -115,9 +119,8 @@ Return ONLY the JSON object. Do not explain your output or surround it with mark
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		var errBody bytes.Buffer
-		errBody.ReadFrom(resp.Body)
-		return nil, fmt.Errorf("LLM provider returned status code %d: %s", resp.StatusCode, errBody.String())
+		errBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("LLM provider returned status code %d: %s", resp.StatusCode, string(errBytes))
 	}
 
 	var chatResp chatResponse

@@ -391,13 +391,11 @@ func (h *Handler) ExplainDiscrepancy(c *gin.Context) {
 		var cachedExpl llm.Explanation
 
 		err := json.Unmarshal([]byte(*detail.Explanation), &cachedExpl)
-		if err != nil {
-			h.logger.Warn("Failed to unmarshal cached explanation from DB; querying LLM for fresh explanation", "discrepancy_id", discrepancyID)
-			response.SendError(c, http.StatusInternalServerError, "Something went wrong while retrieving explanation")
+		if err == nil {
+			response.SendSuccess(c, http.StatusOK, cachedExpl)
 			return
 		}
-		response.SendSuccess(c, http.StatusOK, cachedExpl)
-		return
+		h.logger.Warn("Failed to unmarshal cached explanation from DB", "discrepancy_id", discrepancyID, "error", err)
 	}
 
 	// 3. Cache Miss: Call LLM with the context-rich detail
@@ -484,4 +482,3 @@ func (h *Handler) GetDiscrepancyDetail(c *gin.Context) {
 
 	response.SendSuccess(c, http.StatusOK, detail)
 }
-

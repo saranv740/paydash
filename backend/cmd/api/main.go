@@ -65,11 +65,11 @@ func main() {
 		Addr:         config.Port,
 		Handler:      router(config),
 		IdleTimeout:  time.Minute,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
 	}
 
-	shutdownError := make(chan error)
+	shutdownError := make(chan error, 1)
 
 	go func() {
 		quit := make(chan os.Signal, 1)
@@ -81,12 +81,7 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		err := srv.Shutdown(ctx)
-		if err != nil {
-			shutdownError <- err
-		}
-
-		shutdownError <- nil
+		shutdownError <- srv.Shutdown(ctx)
 	}()
 
 	logger.Info("starting server", "addr", port, "env", app.Environment())

@@ -28,7 +28,7 @@ func GetLLMConfig() LLMConfig {
 
 	model := os.Getenv("LLM_MODEL")
 	if model == "" {
-		model = "thinkingmachines/inkling"
+		model = "llama-3.3-70b-versatile"
 	}
 
 	temp := 0.2
