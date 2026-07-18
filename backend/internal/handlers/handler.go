@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/saranv740/paydash/internal/analyzer"
+	"github.com/saranv740/paydash/internal/models"
 	"github.com/saranv740/paydash/internal/parser"
 	"github.com/saranv740/paydash/internal/response"
 	"github.com/saranv740/paydash/internal/store"
@@ -53,7 +55,7 @@ func (h *Handler) UploadBatch(c *gin.Context) {
 	batchName := c.DefaultPostForm("name", "Reconciliation Run")
 	batchID := uuid.New().String()
 
-	// 3. Step 1: Parse & Sanitize CSVs
+	// 3. Parse & Sanitize CSVs
 	ordersFile, err := ordersHeader.Open()
 	if err != nil {
 		h.logger.Error("Failed to open orders file", "error", err)
@@ -84,10 +86,21 @@ func (h *Handler) UploadBatch(c *gin.Context) {
 		return
 	}
 
-	// 4. Step 2: Analyze Discrepancies using Mutually Exclusive Precedence Hierarchy
+	// 4. Analyze Discrepancies using Mutually Exclusive Precedence Hierarchy
 	reconResults := analyzer.FindDiscrepancies(ownerID, batchID, orders, payments)
 
-	h.logger.Info("Discrepancy analysis completed",
+	// 5. Compute complete upload batch metadata
+	batch := computeBatchMetadata(ownerID, batchID, batchName, orders, payments, reconResults)
+
+	// 6. Save to database inside a single transaction
+	err = h.store.SaveReconciliationRun(c.Request.Context(), batch, orders, payments, reconResults)
+	if err != nil {
+		h.logger.Error("Failed to persist reconciliation run to DB", "error", err)
+		response.SendError(c, http.StatusInternalServerError, "failed to save reconciliation data")
+		return
+	}
+
+	h.logger.Info("Discrepancy analysis completed and saved to DB",
 		"owner_id", ownerID,
 		"batch_id", batchID,
 		"orders_count", len(orders),
@@ -96,11 +109,45 @@ func (h *Handler) UploadBatch(c *gin.Context) {
 	)
 
 	response.SendSuccess(c, http.StatusOK, gin.H{
-		"batch_id":            batchID,
-		"batch_name":          batchName,
-		"orders_count":        len(orders),
-		"payments_count":      len(payments),
+		"batch":               batch,
 		"discrepancies_count": len(reconResults),
-		"discrepancies":       reconResults,
 	})
+}
+
+// Helper to compute summary KPI metadata for UploadBatch
+func computeBatchMetadata(ownerID, batchID, batchName string, orders []models.Order, payments []models.Payment, discrepancies []models.ReconResult) *models.UploadBatch {
+	now := time.Now()
+	var totalOrdersAmt float64
+	for _, o := range orders {
+		totalOrdersAmt += parser.ParseFloat(o.NetAmount)
+	}
+
+	var totalPaymentsAmt float64
+	for _, p := range payments {
+		totalPaymentsAmt += parser.ParseFloat(p.Amount)
+	}
+
+	var disputeAmt float64
+	for _, d := range discrepancies {
+		disputeAmt += parser.ParseFloat(&d.AmountAtRisk)
+	}
+
+	reconciledAmt := totalOrdersAmt - disputeAmt
+	if reconciledAmt < 0 {
+		reconciledAmt = 0
+	}
+
+	return &models.UploadBatch{
+		ID:                 batchID,
+		OwnerID:            ownerID,
+		Name:               batchName,
+		TotalOrdersCount:   len(orders),
+		TotalOrdersAmount:  fmt.Sprintf("%.2f", totalOrdersAmt),
+		TotalPaymentsCount: len(payments),
+		TotalPaymentAmount: fmt.Sprintf("%.2f", totalPaymentsAmt),
+		ReconciledAmount:   fmt.Sprintf("%.2f", reconciledAmt),
+		DisputeAmount:      fmt.Sprintf("%.2f", disputeAmt),
+		CreatedAt:          now,
+		UpdatedAt:          now,
+	}
 }

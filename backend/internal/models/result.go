@@ -39,7 +39,7 @@ type ReconResult struct {
 	Type         DiscrepancyType `json:"type" db:"type"`
 	AmountAtRisk string          `json:"amount_at_risk" db:"amount_at_risk"`
 	Explanation  *string         `json:"explanation" db:"explanation"`
-	Status       ResolutionType  `json:"status" db:"status"`
+	Resolution   ResolutionType  `json:"resolution" db:"resolution"`
 	CreatedAt    time.Time       `json:"created_at" db:"created_at"`
 	UpdatedAt    time.Time       `json:"updated_at" db:"updated_at"`
 }

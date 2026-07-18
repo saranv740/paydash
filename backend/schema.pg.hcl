@@ -36,7 +36,7 @@ table "upload_batches" {
   }
 
   column "owner_id" {
-    type = uuid
+    type = text
     null = false
   }
 
@@ -101,7 +101,7 @@ table "orders" {
   }
 
   column "owner_id" {
-    type = uuid
+    type = text
     null = false
   }
 
@@ -183,7 +183,7 @@ table "payments" {
   }
 
   column "owner_id" {
-    type = uuid
+    type = text
     null = false
   }
 
@@ -269,7 +269,7 @@ table "recon_results" {
   }
 
   column "owner_id" {
-    type = uuid
+    type = text
     null = false
   }
 

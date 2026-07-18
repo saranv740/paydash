@@ -181,6 +181,9 @@ func getString(s *string) string {
 
 // createDiscrepancy constructs a models.ReconResult with generated UUID and default UNRESOLVED status
 func createDiscrepancy(ownerID string, batchID string, orderID *string, paymentID *string, discType models.DiscrepancyType, riskAmount string) models.ReconResult {
+	defaultResolution := models.Unresolved
+	defaultExplanation := ""
+
 	return models.ReconResult{
 		ID:           uuid.New().String(),
 		OwnerID:      ownerID,
@@ -189,6 +192,7 @@ func createDiscrepancy(ownerID string, batchID string, orderID *string, paymentI
 		PaymentID:    paymentID,
 		Type:         discType,
 		AmountAtRisk: riskAmount,
-		Status:       models.Unresolved,
+		Resolution:   defaultResolution,
+		Explanation:  &defaultExplanation,
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -219,4 +220,15 @@ func ParsePayments(r io.Reader, ownerID, batchID string) ([]models.Payment, erro
 	}
 
 	return payments, nil
+}
+
+func ParseFloat(s *string) float64 {
+	if s == nil || *s == "" {
+		return 0.0
+	}
+	val, err := strconv.ParseFloat(*s, 64)
+	if err != nil {
+		return 0.0
+	}
+	return val
 }
