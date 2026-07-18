@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -202,6 +203,104 @@ func (h *Handler) GetBatchReport(c *gin.Context) {
 	}
 
 	response.SendSuccess(c, http.StatusOK, report)
+}
+
+type updateBatchNameRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+// UpdateBatchName handles updating the display name of an upload batch
+func (h *Handler) UpdateBatchName(c *gin.Context) {
+	ownerID := c.GetString("userID")
+	if ownerID == "" {
+		h.logger.Warn("User ID missing from request context")
+		response.SendError(c, http.StatusUnauthorized, "User authentication required")
+		return
+	}
+
+	batchID := c.Param("id")
+	if batchID == "" {
+		response.SendFail(c, http.StatusBadRequest, gin.H{"id": "batch ID is required"})
+		return
+	}
+
+	var req updateBatchNameRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.SendFail(c, http.StatusBadRequest, gin.H{"name": "batch name is required"})
+		return
+	}
+
+	newName := strings.TrimSpace(req.Name)
+	if newName == "" {
+		response.SendFail(c, http.StatusBadRequest, gin.H{"name": "batch name cannot be empty"})
+		return
+	}
+
+	err := h.store.UpdateBatchName(c.Request.Context(), ownerID, batchID, newName)
+	if err != nil {
+		if errors.Is(err, store.ErrBatchNotFound) {
+			response.SendError(c, http.StatusNotFound, "reconciliation batch not found")
+			return
+		}
+		h.logger.Error("Failed to update batch name", "batch_id", batchID, "owner_id", ownerID, "error", err)
+		response.SendError(c, http.StatusInternalServerError, "failed to update batch name")
+		return
+	}
+
+	response.SendSuccess(c, http.StatusOK, gin.H{
+		"id":   batchID,
+		"name": newName,
+	})
+}
+
+type updateResolutionRequest struct {
+	Resolution models.ResolutionType `json:"resolution" binding:"required"`
+}
+
+// UpdateDiscrepancyResolution handles changing the resolution state of a discrepancy
+func (h *Handler) UpdateDiscrepancyResolution(c *gin.Context) {
+	ownerID := c.GetString("userID")
+	if ownerID == "" {
+		h.logger.Warn("User ID missing from request context")
+		response.SendError(c, http.StatusUnauthorized, "User authentication required")
+		return
+	}
+
+	discrepancyID := c.Param("id")
+	if discrepancyID == "" {
+		response.SendFail(c, http.StatusBadRequest, gin.H{"id": "discrepancy ID is required"})
+		return
+	}
+
+	var req updateResolutionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.SendFail(c, http.StatusBadRequest, gin.H{"resolution": "resolution state is required"})
+		return
+	}
+
+	switch req.Resolution {
+	case models.Resolved, models.Unresolved, models.Ignored:
+		// Valid resolution type
+	default:
+		response.SendFail(c, http.StatusBadRequest, gin.H{"resolution": "invalid resolution value, must be RESOLVED, UNRESOLVED, or IGNORED"})
+		return
+	}
+
+	err := h.store.UpdateDiscrepancyResolution(c.Request.Context(), ownerID, discrepancyID, req.Resolution)
+	if err != nil {
+		if errors.Is(err, store.ErrDiscrepancyNotFound) {
+			response.SendError(c, http.StatusNotFound, "discrepancy not found")
+			return
+		}
+		h.logger.Error("Failed to update discrepancy resolution", "discrepancy_id", discrepancyID, "owner_id", ownerID, "error", err)
+		response.SendError(c, http.StatusInternalServerError, "failed to update discrepancy resolution")
+		return
+	}
+
+	response.SendSuccess(c, http.StatusOK, gin.H{
+		"id":         discrepancyID,
+		"resolution": req.Resolution,
+	})
 }
 
 // Helper to compute summary KPI metadata for UploadBatch

@@ -34,6 +34,9 @@ func router(config *app.Config) *gin.Engine {
 	private.POST("/upload", h.UploadBatch)
 	private.GET("/batches", h.ListBatches)
 	private.GET("/batches/:id/report", h.GetBatchReport)
+	private.PATCH("/batches/:id", h.UpdateBatchName)
+	private.PATCH("/discrepancies/:id/resolution", h.UpdateDiscrepancyResolution)
 
 	return router
 }
+

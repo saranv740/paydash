@@ -14,6 +14,8 @@ import (
 )
 
 var ErrBatchNotFound = errors.New("reconciliation batch not found")
+var ErrDiscrepancyNotFound = errors.New("discrepancy result not found")
+
 
 type Store struct {
 	db *db.DBC
@@ -479,3 +481,38 @@ func (s *Store) GetBatchReport(ctx context.Context, params models.ReportFilterPa
 		},
 	}, nil
 }
+
+// UpdateBatchName updates the name of an upload batch belonging to an owner
+func (s *Store) UpdateBatchName(ctx context.Context, ownerID, batchID, newName string) error {
+	query := `
+		UPDATE upload_batches
+		SET name = $1, updated_at = NOW()
+		WHERE id = $2 AND owner_id = $3
+	`
+	cmdTag, err := s.db.Exec(ctx, query, newName, batchID, ownerID)
+	if err != nil {
+		return fmt.Errorf("failed to update batch name: %w", err)
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return ErrBatchNotFound
+	}
+	return nil
+}
+
+// UpdateDiscrepancyResolution updates the resolution status of a discrepancy
+func (s *Store) UpdateDiscrepancyResolution(ctx context.Context, ownerID, discrepancyID string, resolution models.ResolutionType) error {
+	query := `
+		UPDATE recon_results
+		SET resolution = $1, updated_at = NOW()
+		WHERE id = $2 AND owner_id = $3
+	`
+	cmdTag, err := s.db.Exec(ctx, query, resolution, discrepancyID, ownerID)
+	if err != nil {
+		return fmt.Errorf("failed to update discrepancy resolution: %w", err)
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return ErrDiscrepancyNotFound
+	}
+	return nil
+}
+
