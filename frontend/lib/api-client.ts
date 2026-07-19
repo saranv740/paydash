@@ -11,8 +11,7 @@ import {
   UploadBatch,
 } from "./types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/v1";
 
 /**
  * Creates an Axios instance with automatic authorization header injection
@@ -59,21 +58,20 @@ export function useApiClient() {
           formData.append("name", name);
         }
 
-        const res = await client.post<ApiResponse<{ batch: UploadBatch; discrepancies_count: number }>>(
-          "/upload",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
+        const res = await client.post<
+          ApiResponse<{ batch: UploadBatch; discrepancies_count: number }>
+        >("/upload", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
         return res.data.data;
       },
 
       // 2. Fetch all reconciliation upload runs
       async listBatches() {
-        const res = await client.get<ApiResponse<{ batches: UploadBatch[]; total: number }>>("/batches");
+        const res =
+          await client.get<ApiResponse<{ batches: UploadBatch[]; total: number }>>("/batches");
         return res.data.data?.batches || [];
       },
 
@@ -93,7 +91,7 @@ export function useApiClient() {
               sort_by: params.sort_by || undefined,
               sort_order: params.sort_order || undefined,
             },
-          }
+          },
         );
         return res.data.data;
       },
@@ -102,7 +100,7 @@ export function useApiClient() {
       async updateBatchName(batchId: string, name: string) {
         const res = await client.patch<ApiResponse<{ id: string; name: string }>>(
           `/batches/${batchId}`,
-          { name }
+          { name },
         );
         return res.data.data;
       },
@@ -110,7 +108,7 @@ export function useApiClient() {
       // 5. Delete upload batch run
       async deleteBatch(batchId: string) {
         const res = await client.delete<ApiResponse<{ id: string; message: string }>>(
-          `/batches/${batchId}`
+          `/batches/${batchId}`,
         );
         return res.data.data;
       },
@@ -125,7 +123,7 @@ export function useApiClient() {
       async updateDiscrepancyResolution(id: string, resolution: ResolutionType) {
         const res = await client.patch<ApiResponse<{ id: string; resolution: ResolutionType }>>(
           `/discrepancies/${id}/resolution`,
-          { resolution }
+          { resolution },
         );
         return res.data.data;
       },

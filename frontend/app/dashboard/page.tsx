@@ -54,22 +54,23 @@ function DashboardContent() {
   });
 
   // Only show initial loader when there is no cached or placeholder data on first load
-  const isInitialLoading = (isLoadingBatches && batches.length === 0) || (isLoadingReport && !report);
+  const isInitialLoading =
+    (isLoadingBatches && batches.length === 0) || (isLoadingReport && !report);
 
   return (
     <div className="flex flex-col gap-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/40 border border-slate-800 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-        <div className="space-y-1 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-medium text-indigo-400">
+      <div className="relative flex flex-col justify-between gap-4 overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/40 p-6 sm:flex-row sm:items-center">
+        <div className="pointer-events-none absolute top-0 right-0 h-full w-80 bg-indigo-500/10 blur-3xl" />
+        <div className="relative z-10 space-y-1">
+          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-400">
             <Sparkles className="size-3.5" />
             <span>Reconciliation Dashboard</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
             {report?.batch.name || "Payment Reconciliation"}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400">
+          <p className="text-xs text-slate-400 sm:text-sm">
             {report
               ? `Reconciled ${report.batch.total_orders_count} orders against ${report.batch.total_payments_count} transactions.`
               : "Select or upload a reconciliation batch to inspect discrepancy analytics."}
@@ -78,11 +79,14 @@ function DashboardContent() {
       </div>
 
       {error ? (
-        <div className="p-6 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-start gap-3">
-          <AlertCircle className="size-5 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-xs text-red-400">
+          <AlertCircle className="mt-0.5 size-5 shrink-0" />
           <div className="space-y-1">
-            <span className="font-semibold block">Error Loading Report</span>
-            <span>Failed to load reconciliation report details. Please try switching batches or checking API status.</span>
+            <span className="block font-semibold">Error Loading Report</span>
+            <span>
+              Failed to load reconciliation report details. Please try switching batches or checking
+              API status.
+            </span>
           </div>
         </div>
       ) : (
@@ -95,18 +99,19 @@ function DashboardContent() {
           />
 
           {/* Analytics Charts */}
-          <BreakdownCharts
-            breakdown={report?.breakdown || []}
-            isLoading={isInitialLoading}
-          />
+          <BreakdownCharts breakdown={report?.breakdown || []} isLoading={isInitialLoading} />
 
           {/* Drill-down Table Section */}
           {selectedBatchId && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <h2 className="text-lg font-bold text-white tracking-tight">Discrepancy Drill-Down</h2>
-                  <p className="text-xs text-slate-400">Filter, search, audit, and mark resolutions for specific discrepancies.</p>
+                  <h2 className="text-lg font-bold tracking-tight text-white">
+                    Discrepancy Drill-Down
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Filter, search, audit, and mark resolutions for specific discrepancies.
+                  </p>
                 </div>
                 {/* Tiny indicator to show loading when filters are active in background */}
                 {isPlaceholderData && (
@@ -118,7 +123,7 @@ function DashboardContent() {
               </div>
 
               {isInitialLoading ? (
-                <div className="p-12 text-center text-xs text-slate-500 flex items-center justify-center gap-2 bg-slate-900/60 border border-slate-800 rounded-2xl h-[400px]">
+                <div className="flex h-[400px] items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-12 text-center text-xs text-slate-500">
                   <Loader2 className="size-4 animate-spin text-indigo-500" />
                   <span>Loading transaction data...</span>
                 </div>
@@ -158,7 +163,7 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center p-12 text-slate-400 gap-3">
+        <div className="flex items-center justify-center gap-3 p-12 text-slate-400">
           <Loader2 className="size-6 animate-spin text-indigo-500" />
           <span>Loading dashboard...</span>
         </div>

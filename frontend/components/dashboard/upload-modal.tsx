@@ -4,13 +4,7 @@ import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import {
-  AlertCircle,
-  CheckCircle2,
-  FileSpreadsheet,
-  Loader2,
-  UploadCloud,
-} from "lucide-react";
+import { AlertCircle, CheckCircle2, FileSpreadsheet, Loader2, UploadCloud } from "lucide-react";
 import { useApiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,11 +69,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
       if (!ordersFile) throw new Error("Please select the orders.csv file");
       if (!paymentsFile) throw new Error("Please select the payments.csv file");
 
-      return await api.uploadBatch(
-        ordersFile,
-        paymentsFile,
-        name.trim() || "Reconciliation Run"
-      );
+      return await api.uploadBatch(ordersFile, paymentsFile, name.trim() || "Reconciliation Run");
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["batches"] });
@@ -114,13 +104,16 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !uploadMutation.isPending && !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl bg-slate-900 border-slate-800 text-slate-100 rounded-3xl p-6 sm:p-8" showCloseButton={false}>
-        <DialogHeader className="flex flex-row items-center gap-3 pb-4 border-b border-slate-850">
-          <div className="h-10 w-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+      <DialogContent
+        className="rounded-3xl border-slate-800 bg-slate-900 p-6 text-slate-100 sm:max-w-2xl sm:p-8"
+        showCloseButton={false}
+      >
+        <DialogHeader className="border-slate-850 flex flex-row items-center gap-3 border-b pb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-400">
             <UploadCloud className="size-5" />
           </div>
           <div className="flex flex-col gap-0.5">
-            <DialogTitle className="text-xl font-bold text-white tracking-tight">
+            <DialogTitle className="text-xl font-bold tracking-tight text-white">
               New Reconciliation Run
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-400">
@@ -131,10 +124,10 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
         {/* Error Alert */}
         {errorMsg && (
-          <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-start gap-3">
-            <AlertCircle className="size-4 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-xs text-red-400">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" />
             <div className="flex flex-col gap-1">
-              <span className="font-semibold block">Upload Failed</span>
+              <span className="block font-semibold">Upload Failed</span>
               <span>{errorMsg}</span>
             </div>
           </div>
@@ -144,7 +137,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
         <div className="flex flex-col gap-5 py-2">
           {/* Run Name Input */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+            <label className="text-xs font-semibold tracking-wider text-slate-300 uppercase">
               Run Title (Optional)
             </label>
             <input
@@ -153,28 +146,26 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={uploadMutation.isPending}
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-sm text-white transition-all outline-none placeholder:text-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
           {/* Dual Dropzone Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Orders Dropzone */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-slate-300 uppercase">
                 <FileSpreadsheet className="size-3.5 text-indigo-400" />
                 <span>Orders Export (`orders.csv`)</span>
               </span>
 
               {ordersFile ? (
-                <div className="p-4 rounded-2xl bg-slate-950 border border-indigo-500/40 flex items-center justify-between group">
+                <div className="group flex items-center justify-between rounded-2xl border border-indigo-500/40 bg-slate-950 p-4">
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <CheckCircle2 className="size-5 text-emerald-400 shrink-0" />
+                    <CheckCircle2 className="size-5 shrink-0 text-emerald-400" />
                     <div className="truncate">
-                      <p className="text-xs font-medium text-white truncate">
-                        {ordersFile.name}
-                      </p>
-                      <p className="text-[10px] text-slate-400 font-mono">
+                      <p className="truncate text-xs font-medium text-white">{ordersFile.name}</p>
+                      <p className="font-mono text-[10px] text-slate-400">
                         {formatFileSize(ordersFile.size)}
                       </p>
                     </div>
@@ -192,15 +183,15 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
               ) : (
                 <div
                   {...getOrdersRootProps()}
-                  className={`p-6 rounded-2xl border-2 border-dashed text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
+                  className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-6 text-center transition-all ${
                     isOrdersDragActive
                       ? "border-indigo-500 bg-indigo-500/10"
-                      : "border-slate-800 hover:border-slate-700 bg-slate-950/60"
+                      : "border-slate-800 bg-slate-950/60 hover:border-slate-700"
                   }`}
                 >
                   <input {...getOrdersInputProps()} />
                   <FileSpreadsheet className="size-7 text-slate-500" />
-                  <p className="text-xs text-slate-300 font-medium">
+                  <p className="text-xs font-medium text-slate-300">
                     Drag & drop <code className="text-indigo-400">orders.csv</code>
                   </p>
                   <p className="text-[10px] text-slate-500">or click to browse file</p>
@@ -210,20 +201,18 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
             {/* Payments Dropzone */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-slate-300 uppercase">
                 <FileSpreadsheet className="size-3.5 text-violet-400" />
                 <span>Payments Export (`payments.csv`)</span>
               </span>
 
               {paymentsFile ? (
-                <div className="p-4 rounded-2xl bg-slate-950 border border-violet-500/40 flex items-center justify-between group">
+                <div className="group flex items-center justify-between rounded-2xl border border-violet-500/40 bg-slate-950 p-4">
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <CheckCircle2 className="size-5 text-emerald-400 shrink-0" />
+                    <CheckCircle2 className="size-5 shrink-0 text-emerald-400" />
                     <div className="truncate">
-                      <p className="text-xs font-medium text-white truncate">
-                        {paymentsFile.name}
-                      </p>
-                      <p className="text-[10px] text-slate-400 font-mono">
+                      <p className="truncate text-xs font-medium text-white">{paymentsFile.name}</p>
+                      <p className="font-mono text-[10px] text-slate-400">
                         {formatFileSize(paymentsFile.size)}
                       </p>
                     </div>
@@ -241,15 +230,15 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
               ) : (
                 <div
                   {...getPaymentsRootProps()}
-                  className={`p-6 rounded-2xl border-2 border-dashed text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
+                  className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-6 text-center transition-all ${
                     isPaymentsDragActive
                       ? "border-violet-500 bg-violet-500/10"
-                      : "border-slate-800 hover:border-slate-700 bg-slate-950/60"
+                      : "border-slate-800 bg-slate-950/60 hover:border-slate-700"
                   }`}
                 >
                   <input {...getPaymentsInputProps()} />
                   <FileSpreadsheet className="size-7 text-slate-500" />
-                  <p className="text-xs text-slate-300 font-medium">
+                  <p className="text-xs font-medium text-slate-300">
                     Drag & drop <code className="text-violet-400">payments.csv</code>
                   </p>
                   <p className="text-[10px] text-slate-500">or click to browse file</p>
@@ -265,7 +254,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
             variant="outline"
             onClick={onClose}
             disabled={uploadMutation.isPending}
-            className="border-slate-800 bg-slate-850"
+            className="bg-slate-850 border-slate-800"
           >
             Cancel
           </Button>
@@ -273,7 +262,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
           <Button
             onClick={() => uploadMutation.mutate()}
             disabled={!ordersFile || !paymentsFile || uploadMutation.isPending}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20"
+            className="bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-500"
           >
             {uploadMutation.isPending ? (
               <>
@@ -308,4 +297,3 @@ function XIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-

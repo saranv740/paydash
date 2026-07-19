@@ -19,7 +19,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Paydash | Automated Payment Reconciliation",
-  description: "Enterprise payment and order reconciliation platform with AI-powered discrepancy analysis.",
+  description:
+    "Enterprise payment and order reconciliation platform with AI-powered discrepancy analysis.",
 };
 
 export default function RootLayout({
@@ -37,15 +38,13 @@ export default function RootLayout({
           geistSans.variable,
           geistMono.variable,
           "font-sans",
-          figtree.variable
+          figtree.variable,
         )}
       >
-        <body className="min-h-full flex flex-col bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
+        <body className="flex min-h-full flex-col bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
           <QueryProvider>{children}</QueryProvider>
         </body>
       </html>
     </ClerkProvider>
   );
 }
-
-

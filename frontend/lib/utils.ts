@@ -9,7 +9,10 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Formats monetary amounts into clean USD/currency string
  */
-export function formatCurrency(amount: string | number | null | undefined, currency: string = "USD"): string {
+export function formatCurrency(
+  amount: string | number | null | undefined,
+  currency: string = "USD",
+): string {
   if (!amount) return "$0.00";
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
   if (isNaN(num)) return "$0.00";

@@ -1,22 +1,12 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Search,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApiClient } from "@/lib/api-client";
 import { DiscrepancyDetail, PaginationMeta, ResolutionType } from "@/lib/types";
-import {
-  formatCurrency,
-  formatDate,
-  getDiscrepancyBadge,
-  getResolutionBadge,
-} from "@/lib/utils";
+import { formatCurrency, formatDate, getDiscrepancyBadge, getResolutionBadge } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -118,22 +108,24 @@ export function DiscrepancyTable({
   return (
     <div className="space-y-4">
       {/* Filters & Search Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900 border border-slate-800">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900 p-4 md:flex-row md:items-center">
         {/* Search Bar */}
-        <div className="flex flex-col gap-1.5 flex-1 max-w-md w-full">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Search Records</span>
-          <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
+        <div className="flex w-full max-w-md flex-1 flex-col gap-1.5">
+          <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+            Search Records
+          </span>
+          <form onSubmit={handleSearchSubmit} className="relative flex w-full items-center">
             <input
               type="text"
               placeholder="Search Order ID, Email, Transaction Ref..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-14 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all h-9"
+              className="h-9 w-full rounded-xl border border-slate-800 bg-slate-950 py-2 pr-14 pl-10 text-xs text-white transition-all outline-none placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
             />
-            <Search className="size-4 text-slate-500 absolute left-3.5" />
+            <Search className="absolute left-3.5 size-4 text-slate-500" />
             <Button
               type="submit"
-              className="absolute right-1.5 h-6 px-2.5 text-[9px] bg-slate-800 hover:bg-slate-700 text-slate-200 border-none rounded-lg"
+              className="absolute right-1.5 h-6 rounded-lg border-none bg-slate-800 px-2.5 text-[9px] text-slate-200 hover:bg-slate-700"
             >
               Search
             </Button>
@@ -141,18 +133,20 @@ export function DiscrepancyTable({
         </div>
 
         {/* Filter Dropdowns */}
-        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+        <div className="flex w-full flex-wrap items-center gap-4 md:w-auto">
           {/* Discrepancy Type Filter */}
-          <div className="flex flex-col gap-1.5 min-w-[160px] flex-1 sm:flex-initial">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Classification</span>
+          <div className="flex min-w-[160px] flex-1 flex-col gap-1.5 sm:flex-initial">
+            <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+              Classification
+            </span>
             <Select
               value={searchParams.get("discrepancy_type") || "ALL"}
               onValueChange={(val) => updateParams({ discrepancy_type: val || undefined, page: 1 })}
             >
-              <SelectTrigger className="border-slate-800 bg-slate-950 text-slate-300 text-xs h-9 w-full">
+              <SelectTrigger className="h-9 w-full border-slate-800 bg-slate-950 text-xs text-slate-300">
                 <SelectValue placeholder="Discrepancy Type" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-950 border-slate-800 text-slate-300">
+              <SelectContent className="border-slate-800 bg-slate-950 text-slate-300">
                 {DISCREPANCY_TYPES.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
@@ -163,16 +157,18 @@ export function DiscrepancyTable({
           </div>
 
           {/* Resolution Status Filter */}
-          <div className="flex flex-col gap-1.5 min-w-[140px] flex-1 sm:flex-initial">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Resolution</span>
+          <div className="flex min-w-[140px] flex-1 flex-col gap-1.5 sm:flex-initial">
+            <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+              Resolution
+            </span>
             <Select
               value={searchParams.get("resolution") || "ALL"}
               onValueChange={(val) => updateParams({ resolution: val || undefined, page: 1 })}
             >
-              <SelectTrigger className="border-slate-800 bg-slate-950 text-slate-300 text-xs h-9 w-full">
+              <SelectTrigger className="h-9 w-full border-slate-800 bg-slate-950 text-xs text-slate-300">
                 <SelectValue placeholder="Resolution Status" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-950 border-slate-800 text-slate-300">
+              <SelectContent className="border-slate-800 bg-slate-950 text-slate-300">
                 {RESOLUTION_STATUSES.map((r) => (
                   <SelectItem key={r.value} value={r.value}>
                     {r.label}
@@ -185,22 +181,28 @@ export function DiscrepancyTable({
       </div>
 
       {/* Discrepancies Table */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm">
         <Table>
-          <TableHeader className="bg-slate-900 border-b border-slate-800">
-            <TableRow className="hover:bg-slate-900 border-none">
-              <TableHead className="text-slate-400 font-semibold text-xs">Issue Classification</TableHead>
-              <TableHead className="text-slate-400 font-semibold text-xs">Order Context</TableHead>
-              <TableHead className="text-slate-400 font-semibold text-xs">Payment Settlement</TableHead>
-              <TableHead className="text-slate-400 font-semibold text-xs">Amount at Risk</TableHead>
-              <TableHead className="text-slate-400 font-semibold text-xs">Status</TableHead>
-              <TableHead className="text-slate-400 font-semibold text-xs text-right">Actions</TableHead>
+          <TableHeader className="border-b border-slate-800 bg-slate-900">
+            <TableRow className="border-none hover:bg-slate-900">
+              <TableHead className="text-xs font-semibold text-slate-400">
+                Issue Classification
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-slate-400">Order Context</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-400">
+                Payment Settlement
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-slate-400">Amount at Risk</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-400">Status</TableHead>
+              <TableHead className="text-right text-xs font-semibold text-slate-400">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {discrepancies.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={6} className="h-40 text-center text-slate-500 text-xs">
+                <TableCell colSpan={6} className="h-40 text-center text-xs text-slate-500">
                   No discrepancy records match the active filters.
                 </TableCell>
               </TableRow>
@@ -210,10 +212,15 @@ export function DiscrepancyTable({
                 const resBadge = getResolutionBadge(item.resolution);
 
                 return (
-                  <TableRow key={item.id} className="border-slate-850 hover:bg-slate-850/40 transition-colors">
+                  <TableRow
+                    key={item.id}
+                    className="border-slate-850 hover:bg-slate-850/40 transition-colors"
+                  >
                     {/* Discrepancy Type Badge */}
                     <TableCell className="py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-medium border ${badge.className}`}>
+                      <span
+                        className={`rounded-full border px-2.5 py-1 text-[10px] font-medium ${badge.className}`}
+                      >
                         {badge.label}
                       </span>
                     </TableCell>
@@ -222,9 +229,12 @@ export function DiscrepancyTable({
                     <TableCell className="py-3 text-slate-300">
                       {item.order ? (
                         <div className="flex flex-col">
-                          <span className="text-xs font-semibold text-white font-mono">{item.order.order_id}</span>
+                          <span className="font-mono text-xs font-semibold text-white">
+                            {item.order.order_id}
+                          </span>
                           <span className="text-[10px] text-slate-400">
-                            {item.order.customer_email || "No Email"} &bull; {formatDate(item.order.order_date)}
+                            {item.order.customer_email || "No Email"} &bull;{" "}
+                            {formatDate(item.order.order_date)}
                           </span>
                         </div>
                       ) : (
@@ -236,24 +246,31 @@ export function DiscrepancyTable({
                     <TableCell className="py-3 text-slate-300">
                       {item.payment ? (
                         <div className="flex flex-col">
-                          <span className="text-xs font-semibold text-white font-mono">{item.payment.transaction_ref}</span>
+                          <span className="font-mono text-xs font-semibold text-white">
+                            {item.payment.transaction_ref}
+                          </span>
                           <span className="text-[10px] text-slate-400">
-                            {item.payment.type || "settlement"} &bull; {formatDate(item.payment.processed_at)}
+                            {item.payment.type || "settlement"} &bull;{" "}
+                            {formatDate(item.payment.processed_at)}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-[11px] text-slate-500 italic">No Processor Record</span>
+                        <span className="text-[11px] text-slate-500 italic">
+                          No Processor Record
+                        </span>
                       )}
                     </TableCell>
 
                     {/* Value At Risk */}
-                    <TableCell className="py-3 font-semibold font-mono text-xs text-rose-400">
+                    <TableCell className="py-3 font-mono text-xs font-semibold text-rose-400">
                       {formatCurrency(item.amount_at_risk)}
                     </TableCell>
 
                     {/* Status Badge */}
                     <TableCell className="py-3">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium border ${resBadge.className}`}>
+                      <span
+                        className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${resBadge.className}`}
+                      >
                         {resBadge.label}
                       </span>
                     </TableCell>
@@ -272,10 +289,10 @@ export function DiscrepancyTable({
                           }
                           disabled={resolutionMutation.isPending}
                         >
-                          <SelectTrigger className="h-7 border-slate-800 bg-slate-900 text-xs px-2.5 text-slate-400 hover:text-white">
+                          <SelectTrigger className="h-7 border-slate-800 bg-slate-900 px-2.5 text-xs text-slate-400 hover:text-white">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-slate-950 border-slate-800 text-slate-300">
+                          <SelectContent className="border-slate-800 bg-slate-950 text-slate-300">
                             <SelectItem value="UNRESOLVED">Unresolved</SelectItem>
                             <SelectItem value="RESOLVED">Resolved</SelectItem>
                             <SelectItem value="IGNORED">Ignored</SelectItem>
@@ -287,7 +304,7 @@ export function DiscrepancyTable({
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => onSelectDiscrepancy(item.id)}
-                          className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-600/10"
+                          className="text-indigo-400 hover:bg-indigo-600/10 hover:text-indigo-300"
                           title="Inspect discrepancy parameters"
                         >
                           <Eye className="size-3.5" />
@@ -303,10 +320,11 @@ export function DiscrepancyTable({
 
         {/* Pagination Footer */}
         {pagination && pagination.total_pages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 bg-slate-900 border-t border-slate-800 text-slate-400 text-xs">
+          <div className="flex items-center justify-between border-t border-slate-800 bg-slate-900 px-6 py-4 text-xs text-slate-400">
             <span>
               Showing Page <strong className="text-white">{pagination.current_page}</strong> of{" "}
-              <strong className="text-white">{pagination.total_pages}</strong> ({pagination.total_records} records)
+              <strong className="text-white">{pagination.total_pages}</strong> (
+              {pagination.total_records} records)
             </span>
 
             <div className="flex items-center gap-2">

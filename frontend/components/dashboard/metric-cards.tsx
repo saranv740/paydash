@@ -4,13 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UploadBatch, DiscrepancyDetail } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
-import {
-  TrendingUp,
-  CreditCard,
-  CheckCircle,
-  AlertTriangle,
-  ShieldAlert,
-} from "lucide-react";
+import { TrendingUp, CreditCard, CheckCircle, AlertTriangle, ShieldAlert } from "lucide-react";
 
 interface MetricCardsProps {
   batch?: UploadBatch;
@@ -21,9 +15,9 @@ interface MetricCardsProps {
 export function MetricCards({ batch, discrepancies = [], isLoading }: MetricCardsProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {Array.from({ length: 5 }).map((_, idx) => (
-          <Card key={idx} className="bg-slate-900 border-slate-800 p-4">
+          <Card key={idx} className="border-slate-800 bg-slate-900 p-4">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <Skeleton className="h-4 w-24 bg-slate-800" />
               <Skeleton className="h-8 w-8 rounded-xl bg-slate-800" />
@@ -42,7 +36,7 @@ export function MetricCards({ batch, discrepancies = [], isLoading }: MetricCard
   const unresolvedDiscrepancies = discrepancies.filter((d) => d.resolution === "UNRESOLVED");
   const moneyAtRisk = unresolvedDiscrepancies.reduce(
     (sum, d) => sum + parseFloat(d.amount_at_risk || "0"),
-    0
+    0,
   );
 
   const metrics = [
@@ -92,26 +86,28 @@ export function MetricCards({ batch, discrepancies = [], isLoading }: MetricCard
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
       {metrics.map((m, idx) => {
         const IconComponent = m.icon;
         return (
           <Card key={idx} className={`border p-4 transition-all hover:scale-[1.01] ${m.className}`}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 px-0 pt-0">
-              <CardTitle className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <CardHeader className="flex flex-row items-center justify-between px-0 pt-0 pb-2">
+              <CardTitle className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
                 {m.title}
               </CardTitle>
-              <div className={`h-8 w-8 rounded-xl flex items-center justify-center border border-transparent ${m.iconColor}`}>
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-xl border border-transparent ${m.iconColor}`}
+              >
                 <IconComponent className="size-4" />
               </div>
             </CardHeader>
-            <CardContent className="p-0 mt-1.5 flex flex-col gap-0.5">
-              <span className={`text-xl font-extrabold tracking-tight ${m.valueColor || "text-white"}`}>
+            <CardContent className="mt-1.5 flex flex-col gap-0.5 p-0">
+              <span
+                className={`text-xl font-extrabold tracking-tight ${m.valueColor || "text-white"}`}
+              >
                 {m.value}
               </span>
-              <span className="text-[11px] text-slate-400 font-medium">
-                {m.subtitle}
-              </span>
+              <span className="text-[11px] font-medium text-slate-400">{m.subtitle}</span>
             </CardContent>
           </Card>
         );

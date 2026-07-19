@@ -38,15 +38,15 @@ const COLORS = [
 export function BreakdownCharts({ breakdown, isLoading }: BreakdownChartsProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {Array.from({ length: 2 }).map((_, idx) => (
-          <Card key={idx} className="border-slate-800 bg-slate-900/60 p-6 flex flex-col gap-4">
+          <Card key={idx} className="flex flex-col gap-4 border-slate-800 bg-slate-900/60 p-6">
             <div className="space-y-2">
               <Skeleton className="h-5 w-40 bg-slate-800" />
               <Skeleton className="h-4 w-72 bg-slate-800" />
             </div>
-            <div className="h-60 flex items-center justify-center">
-              <Skeleton className="size-48 rounded-full bg-slate-800 animate-pulse" />
+            <div className="flex h-60 items-center justify-center">
+              <Skeleton className="size-48 animate-pulse rounded-full bg-slate-800" />
             </div>
           </Card>
         ))}
@@ -56,7 +56,7 @@ export function BreakdownCharts({ breakdown, isLoading }: BreakdownChartsProps) 
 
   if (!breakdown || breakdown.length === 0) {
     return (
-      <Card className="bg-slate-900 border-slate-800 p-8 text-center text-slate-500">
+      <Card className="border-slate-800 bg-slate-900 p-8 text-center text-slate-500">
         No discrepancy breakdown data available. Upload files to generate analytics.
       </Card>
     );
@@ -78,18 +78,16 @@ export function BreakdownCharts({ breakdown, isLoading }: BreakdownChartsProps) 
   const barData = [...chartData].sort((a, b) => b.amount - a.amount);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {/* 1. Donut Chart - Count by Category */}
-      <Card className="border-slate-800 bg-slate-900/60 backdrop-blur-sm text-slate-100 flex flex-col justify-between">
+      <Card className="flex flex-col justify-between border-slate-800 bg-slate-900/60 text-slate-100 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-base font-bold text-white">
-            Discrepancy Count
-          </CardTitle>
+          <CardTitle className="text-base font-bold text-white">Discrepancy Count</CardTitle>
           <CardDescription className="text-xs text-slate-400">
             Distribution of reconciliation issues by transaction count.
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-80 flex items-center justify-center relative">
+        <CardContent className="relative flex h-80 items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart style={{ outline: "none" }} className="outline-none">
               <Pie
@@ -110,13 +108,11 @@ export function BreakdownCharts({ breakdown, isLoading }: BreakdownChartsProps) 
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;
                     return (
-                      <div className="bg-slate-950/95 border border-slate-800 p-3 rounded-xl shadow-2xl flex flex-col gap-1 transition-opacity duration-150 backdrop-blur-sm animate-in fade-in-0 duration-75">
-                        <span className="text-xs font-semibold text-white">
-                          {data.name}
-                        </span>
+                      <div className="animate-in fade-in-0 flex flex-col gap-1 rounded-xl border border-slate-800 bg-slate-950/95 p-3 shadow-2xl backdrop-blur-sm transition-opacity duration-75 duration-150">
+                        <span className="text-xs font-semibold text-white">{data.name}</span>
                         <div className="flex items-center gap-4 text-xs">
                           <span className="text-slate-400">Count:</span>
-                          <span className="font-semibold text-slate-200 font-mono">
+                          <span className="font-mono font-semibold text-slate-200">
                             {data.count} issues
                           </span>
                         </div>
@@ -136,17 +132,17 @@ export function BreakdownCharts({ breakdown, isLoading }: BreakdownChartsProps) 
                 verticalAlign="bottom"
                 height={36}
                 content={({ payload }) => (
-                  <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[11px] text-slate-400 pt-4">
+                  <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pt-4 text-[11px] text-slate-400">
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {payload?.map((entry: any, index) => {
                       const itemColor = entry.payload?.fill || entry.color;
                       return (
                         <div key={index} className="flex items-center gap-1.5">
                           <span
-                            className="size-2 rounded-full shrink-0"
+                            className="size-2 shrink-0 rounded-full"
                             style={{ backgroundColor: itemColor }}
                           />
-                          <span className="truncate max-w-[140px]">{entry.value}</span>
+                          <span className="max-w-[140px] truncate">{entry.value}</span>
                         </div>
                       );
                     })}
@@ -159,11 +155,9 @@ export function BreakdownCharts({ breakdown, isLoading }: BreakdownChartsProps) 
       </Card>
 
       {/* 2. Bar Chart - Financial Value at Risk */}
-      <Card className="border-slate-800 bg-slate-900/60 backdrop-blur-sm text-slate-100 flex flex-col justify-between">
+      <Card className="flex flex-col justify-between border-slate-800 bg-slate-900/60 text-slate-100 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-base font-bold text-white">
-            Financial Impact
-          </CardTitle>
+          <CardTitle className="text-base font-bold text-white">Financial Impact</CardTitle>
           <CardDescription className="text-xs text-slate-400">
             Total monetary value at risk grouped by discrepancy category.
           </CardDescription>
@@ -200,13 +194,11 @@ export function BreakdownCharts({ breakdown, isLoading }: BreakdownChartsProps) 
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;
                     return (
-                      <div className="bg-slate-950/95 border border-slate-800 p-3 rounded-xl shadow-2xl flex flex-col gap-1 transition-opacity duration-150 backdrop-blur-sm animate-in fade-in-0 duration-75">
-                        <span className="text-xs font-semibold text-white">
-                          {data.name}
-                        </span>
+                      <div className="animate-in fade-in-0 flex flex-col gap-1 rounded-xl border border-slate-800 bg-slate-950/95 p-3 shadow-2xl backdrop-blur-sm transition-opacity duration-75 duration-150">
+                        <span className="text-xs font-semibold text-white">{data.name}</span>
                         <div className="flex items-center gap-4 text-xs">
                           <span className="text-slate-400">Value at Risk:</span>
-                          <span className="font-semibold text-rose-400 font-mono">
+                          <span className="font-mono font-semibold text-rose-400">
                             {formatCurrency(data.amount)}
                           </span>
                         </div>
