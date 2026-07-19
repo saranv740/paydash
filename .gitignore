@@ -2,6 +2,7 @@
 
 .env
 .DS_Store
+*.pem
 
 ### Go ###
 
@@ -21,7 +22,15 @@
 # Go workspace file
 go.work
 
-### Svelte ###
+### NextJS ###
+node_modules
+.next/
+out/
+coverage
 
-.svelte-kit/
-package
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
