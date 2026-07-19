@@ -8,6 +8,7 @@ import { Sparkles, Loader2, AlertCircle } from "lucide-react";
 import { MetricCards } from "@/components/dashboard/metric-cards";
 import { BreakdownCharts } from "@/components/dashboard/breakdown-charts";
 import { DiscrepancyTable } from "@/components/dashboard/discrepancy-table";
+import { DiscrepancyDrawer } from "@/components/dashboard/discrepancy-drawer";
 
 function DashboardContent() {
   const api = useApiClient();
@@ -137,6 +138,15 @@ function DashboardContent() {
                 />
               )}
             </div>
+          )}
+
+          {/* Side Drawer Transaction Audit Inspector & AI analysis */}
+          {selectedBatchId && (
+            <DiscrepancyDrawer
+              discrepancyId={selectedDiscrepancyId}
+              onClose={() => setSelectedDiscrepancyId(null)}
+              batchId={selectedBatchId}
+            />
           )}
         </>
       )}
