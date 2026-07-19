@@ -3,6 +3,7 @@ FROM node:24-alpine AS base
 
 # Install pnpm
 RUN npm install -g pnpm
+ENV CI=true
 
 WORKDIR /app
 

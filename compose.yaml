@@ -42,14 +42,15 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:3000/v1
       - PORT=3001
+      - CI=true
     develop:
       watch:
         - action: sync
           path: ./frontend
           target: /app
           ignore:
-            - frontend/node_modules/
-            - frontend/.next/
+            - node_modules/
+            - .next/
         - action: rebuild
           path: ./frontend/package.json
 
