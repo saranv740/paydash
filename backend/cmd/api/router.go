@@ -43,6 +43,3 @@ func router(config *app.Config) *gin.Engine {
 
 	return router
 }
-
-
-

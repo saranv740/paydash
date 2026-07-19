@@ -11,5 +11,17 @@ services:
     volumes:
       - pg-data:/var/lib/postgresql/18/docker
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - DB_URL=postgres://paydash_admin:1QTr2puWICDy3k5D@db:5432/paydash?sslmode=disable
+    depends_on:
+      - db
 volumes:
   pg-data:
