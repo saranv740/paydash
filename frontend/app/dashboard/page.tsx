@@ -1,19 +1,29 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api-client";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle } from "lucide-react";
 import { MetricCards } from "@/components/dashboard/metric-cards";
 import { BreakdownCharts } from "@/components/dashboard/breakdown-charts";
+import { DiscrepancyTable } from "@/components/dashboard/discrepancy-table";
 
 function DashboardContent() {
   const api = useApiClient();
   const searchParams = useSearchParams();
-  const activeBatchId = searchParams.get("batch_id");
 
-  // List all available runs
+  // URL query parameters for table filtering and pagination
+  const activeBatchId = searchParams.get("batch_id");
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const search = searchParams.get("search") || "";
+  const discrepancy_type = searchParams.get("discrepancy_type") || "";
+  const resolution = searchParams.get("resolution") || "";
+
+  // Selected discrepancy ID (for side drawer inspector)
+  const [selectedDiscrepancyId, setSelectedDiscrepancyId] = useState<string | null>(null);
+
+  // List all available runs (cached, doesn't reload on page/filter change)
   const { data: batches = [], isLoading: isLoadingBatches } = useQuery({
     queryKey: ["batches"],
     queryFn: () => api.listBatches(),
@@ -21,13 +31,28 @@ function DashboardContent() {
 
   const selectedBatchId = activeBatchId || batches[0]?.id;
 
-  // Fetch report for selected batch run
-  const { data: report, isLoading: isLoadingReport } = useQuery({
-    queryKey: ["batch-report", selectedBatchId],
-    queryFn: () => api.getBatchReport(selectedBatchId!),
+  // Single unified API query fetching the report
+  // placeholderData: keepPreviousData preserves data between query keys to prevent skeletons/flicker
+  const {
+    data: report,
+    isLoading: isLoadingReport,
+    isPlaceholderData,
+    error,
+  } = useQuery({
+    queryKey: ["batch-report", selectedBatchId, { page, search, discrepancy_type, resolution }],
+    queryFn: () =>
+      api.getBatchReport(selectedBatchId!, {
+        page,
+        search,
+        discrepancy_type,
+        resolution,
+        page_size: 10,
+      }),
+    placeholderData: keepPreviousData,
     enabled: !!selectedBatchId,
   });
 
+  // Only show initial loader when there is no cached or placeholder data on first load
   const isInitialLoading = (isLoadingBatches && batches.length === 0) || (isLoadingReport && !report);
 
   return (
@@ -51,18 +76,70 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* Headline Metric Cards */}
-      <MetricCards
-        batch={report?.batch}
-        discrepancies={report?.discrepancies}
-        isLoading={isInitialLoading}
-      />
+      {error ? (
+        <div className="p-6 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-start gap-3">
+          <AlertCircle className="size-5 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-semibold block">Error Loading Report</span>
+            <span>Failed to load reconciliation report details. Please try switching batches or checking API status.</span>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Headline Metric Cards */}
+          <MetricCards
+            batch={report?.batch}
+            discrepancies={report?.discrepancies}
+            isLoading={isInitialLoading}
+          />
 
-      {/* Analytics Breakdown Charts */}
-      <BreakdownCharts
-        breakdown={report?.breakdown || []}
-        isLoading={isInitialLoading}
-      />
+          {/* Analytics Charts */}
+          <BreakdownCharts
+            breakdown={report?.breakdown || []}
+            isLoading={isInitialLoading}
+          />
+
+          {/* Drill-down Table Section */}
+          {selectedBatchId && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <h2 className="text-lg font-bold text-white tracking-tight">Discrepancy Drill-Down</h2>
+                  <p className="text-xs text-slate-400">Filter, search, audit, and mark resolutions for specific discrepancies.</p>
+                </div>
+                {/* Tiny indicator to show loading when filters are active in background */}
+                {isPlaceholderData && (
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <Loader2 className="size-3 animate-spin text-indigo-500" />
+                    <span>Syncing...</span>
+                  </div>
+                )}
+              </div>
+
+              {isInitialLoading ? (
+                <div className="p-12 text-center text-xs text-slate-500 flex items-center justify-center gap-2 bg-slate-900/60 border border-slate-800 rounded-2xl h-[400px]">
+                  <Loader2 className="size-4 animate-spin text-indigo-500" />
+                  <span>Loading transaction data...</span>
+                </div>
+              ) : (
+                <DiscrepancyTable
+                  batchId={selectedBatchId}
+                  discrepancies={report?.discrepancies || []}
+                  pagination={
+                    report?.pagination || {
+                      current_page: 1,
+                      page_size: 15,
+                      total_records: 0,
+                      total_pages: 1,
+                    }
+                  }
+                  onSelectDiscrepancy={(id) => setSelectedDiscrepancyId(id)}
+                />
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
