@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api-client";
 import { Sparkles, Loader2 } from "lucide-react";
 import { MetricCards } from "@/components/dashboard/metric-cards";
+import { BreakdownCharts } from "@/components/dashboard/breakdown-charts";
 
 function DashboardContent() {
   const api = useApiClient();
@@ -54,6 +55,12 @@ function DashboardContent() {
       <MetricCards
         batch={report?.batch}
         discrepancies={report?.discrepancies}
+        isLoading={isInitialLoading}
+      />
+
+      {/* Analytics Breakdown Charts */}
+      <BreakdownCharts
+        breakdown={report?.breakdown || []}
         isLoading={isInitialLoading}
       />
     </div>
