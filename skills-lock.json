@@ -18,6 +18,12 @@
       "sourceType": "github",
       "skillPath": "skills/frameworks/clerk-nextjs-patterns/SKILL.md",
       "computedHash": "6c5b897dcef62550436b24b3cc9087658dd97c9ca88272ab48a5c094276d72fb"
+    },
+    "shadcn": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "d81caa0f86aabab65b25e302d454f23a3328760386ed9078345584c0d5c8058e"
     }
   }
 }
