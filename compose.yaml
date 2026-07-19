@@ -23,5 +23,35 @@ services:
       - DB_URL=postgres://paydash_admin:1QTr2puWICDy3k5D@db:5432/paydash?sslmode=disable
     depends_on:
       - db
+    develop:
+      watch:
+        - action: rebuild
+          path: ./backend
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    depends_on:
+      - backend
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./frontend/.env
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3000/v1
+      - PORT=3001
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+          ignore:
+            - frontend/node_modules/
+            - frontend/.next/
+        - action: rebuild
+          path: ./frontend/package.json
+
 volumes:
   pg-data:
