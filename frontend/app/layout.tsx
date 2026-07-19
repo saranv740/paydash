@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Figtree } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { QueryProvider } from "@/components/query-client";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -39,11 +40,12 @@ export default function RootLayout({
           figtree.variable
         )}
       >
-        <body className="min-h-full flex flex-col bg-background text-foreground">
-          {children}
+        <body className="min-h-full flex flex-col bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
+          <QueryProvider>{children}</QueryProvider>
         </body>
       </html>
     </ClerkProvider>
   );
 }
+
 
