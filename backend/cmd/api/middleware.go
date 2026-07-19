@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/clerk/clerk-sdk-go/v2/jwt"
@@ -11,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/saranv740/paydash/internal/app"
 	"github.com/saranv740/paydash/internal/response"
+	"golang.org/x/time/rate"
 )
 
 func requestIDMiddleware() gin.HandlerFunc {
@@ -103,6 +105,38 @@ func securityHeadersMiddleware() gin.HandlerFunc {
 		if app.IsProd() {
 			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		}
+		c.Next()
+	}
+}
+
+func rateLimiter() gin.HandlerFunc {
+	type client struct {
+		limiter *rate.Limiter
+	}
+
+	var (
+		mu      sync.Mutex
+		clients = make(map[string]*client)
+	)
+
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+
+		mu.Lock()
+		if _, exists := clients[ip]; !exists {
+			// Allow 15 requests per second with a burst of 30
+			clients[ip] = &client{limiter: rate.NewLimiter(15, 30)}
+		}
+		cl := clients[ip]
+		mu.Unlock()
+
+		if !cl.limiter.Allow() {
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
+				"error": "rate limit exceeded",
+			})
+			return
+		}
+
 		c.Next()
 	}
 }
