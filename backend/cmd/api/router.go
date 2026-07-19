@@ -15,12 +15,17 @@ func router(config *app.Config) *gin.Engine {
 	router := gin.New()
 
 	corsConfig := cors.Config{
-		AllowOrigins:     []string{"http://localhost:3001", "http://127.0.0.1:3001"},
 		AllowMethods:     []string{"POST", "OPTIONS", "GET", "PUT", "PATCH", "DELETE"},
 		AllowHeaders:     []string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin", "Cache-Control", "X-Requested-With", "X-Mock-UserID"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
+	}
+
+	if app.IsProd() {
+		corsConfig.AllowOrigins = []string{"http://paydash.codebysaran.in", "https://paydash.codebysaran.in"}
+	} else {
+		corsConfig.AllowOrigins = []string{"http://localhost:3001", "http://127.0.0.1:3001"}
 	}
 
 	router.Use(rateLimiter())
